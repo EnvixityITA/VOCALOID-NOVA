@@ -5,75 +5,107 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>War Thunder Wiki ITA</title>
 
-<!-- FONT MILITARE -->
 <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&display=swap" rel="stylesheet">
 
 <style>
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
     background: black;
     color: white;
     overflow-x: hidden;
+    font-family: Arial, sans-serif;
 }
 
-/* STELLE */
-#stars {
+/* Fade cinematografico iniziale */
+body::before {
+    content: "";
     position: fixed;
     width: 100%;
     height: 100%;
     background: black;
-    z-index: -1;
+    z-index: 999;
+    animation: fadeIntro 2.5s ease forwards;
 }
 
-/* SEZIONI */
+@keyframes fadeIntro {
+    0% { opacity: 1; }
+    100% { opacity: 0; visibility: hidden; }
+}
+
+/* Stelle */
+#stars {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    z-index: -3;
+}
+
+/* FUMO */
+.smoke {
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+    border-radius: 50%;
+    filter: blur(40px);
+    animation: smokeMove 10s infinite alternate ease-in-out;
+}
+
+.smoke:nth-child(1) { top: 20%; left: 30%; }
+.smoke:nth-child(2) { top: 30%; left: 50%; animation-delay: 3s; }
+.smoke:nth-child(3) { top: 10%; left: 60%; animation-delay: 6s; }
+
+@keyframes smokeMove {
+    0% { transform: scale(1) translateY(0); opacity: 0.4; }
+    100% { transform: scale(1.5) translateY(-50px); opacity: 0.1; }
+}
+
+/* Sezione */
 section {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 40px;
-    opacity: 0;
-    transform: translateY(50px);
-    transition: 1s;
+    text-align: center;
+    position: relative;
+    animation: cinematicZoom 3s ease forwards;
 }
 
-section.show {
-    opacity: 1;
-    transform: translateY(0);
+@keyframes cinematicZoom {
+    0% { transform: scale(1.2); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
 }
 
-/* TITOLO MILITARE */
+/* Titolo */
 .main-title {
     font-family: 'Black Ops One', cursive;
     font-size: 4em;
-    text-align: center;
     text-transform: uppercase;
-    letter-spacing: 4px;
-    color: white;
+    letter-spacing: 5px;
     text-shadow: 
         0 0 10px red,
         0 0 20px darkred,
         0 0 40px crimson;
-    margin-bottom: 20px;
+    z-index: 2;
 }
 
-/* IMMAGINE */
+/* Immagine */
 .hero-img {
-    width: 80%;
-    max-width: 600px;
+    width: 85%;
+    max-width: 700px;
+    margin-top: 30px;
     border-radius: 15px;
-    box-shadow: 0 0 30px red;
-    margin-top: 20px;
-    transition: 0.5s;
+    box-shadow: 0 0 40px red;
+    transition: 0.6s;
+    z-index: 2;
 }
 
 .hero-img:hover {
     transform: scale(1.05);
 }
 
-/* RESPONSIVE */
+/* Responsive */
 @media (max-width: 600px) {
     .main-title {
         font-size: 2.5em;
@@ -87,10 +119,18 @@ section.show {
 <canvas id="stars"></canvas>
 
 <section>
+
+    <!-- FUMO -->
+    <div class="smoke"></div>
+    <div class="smoke"></div>
+    <div class="smoke"></div>
+
     <h1 class="main-title">WAR THUNDER WIKI ITA</h1>
 
-    <!-- METTI QUI L'IMMAGINE -->
-    <img class="hero-img" src="https://upload.wikimedia.org/wikipedia/en/2/28/War_Thunder_Logo.png" alt="War Thunder">
+    <!-- IMMAGINE CAMBIATA -->
+    <img class="hero-img" 
+    src="https://warthunder.com/i/opengraph-wt.jpg" 
+    alt="War Thunder Battle Scene">
 
 </section>
 
@@ -133,20 +173,6 @@ function animateStars() {
 }
 
 animateStars();
-
-/* SCROLL ANIMATION */
-const sections = document.querySelectorAll("section");
-
-window.addEventListener("scroll", () => {
-    sections.forEach(section => {
-        const position = section.getBoundingClientRect().top;
-        const screenPosition = window.innerHeight / 1.2;
-
-        if (position < screenPosition) {
-            section.classList.add("show");
-        }
-    });
-});
 </script>
 
 </body>
