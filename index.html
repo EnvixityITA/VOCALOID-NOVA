@@ -3,11 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BIRDBRAIN 4 Colonne - Impostazioni Tasti</title>
+<title>BIRDBRAIN Rhythm - Accuracy & Rank</title>
 <style>
 body {margin:0;overflow:hidden;font-family:Arial;background:black;color:white;}
-#score,#combo{position:absolute;top:10px;font-size:24px;z-index:10;}
-#score{left:10px;} #combo{right:10px;}
+#score,#combo,#rank{position:absolute;top:10px;font-size:24px;z-index:10;}
+#score{left:10px;} 
+#combo{left:200px;} 
+#rank{left:400px;}
 #gameCanvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;}
 #bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-2;
     background:url('immagine_2026-03-03_204259655.png') center center/cover no-repeat;
@@ -23,6 +25,24 @@ body {margin:0;overflow:hidden;font-family:Arial;background:black;color:white;}
     z-index:5;
     opacity:0;
     transition:opacity 1.2s ease-in;
+}
+#accuracyBar{
+    position:absolute;
+    bottom:50px;
+    left:50%;
+    transform:translateX(-50%);
+    width:300px;
+    height:8px;
+    background:rgba(255,255,255,0.2);
+    border-radius:4px;
+    overflow:hidden;
+    z-index:5;
+}
+#accuracyFill{
+    width:0%;
+    height:100%;
+    background:lime;
+    transition:width 0.1s;
 }
 #menu{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;text-align:center;}
 button{font-size:18px;padding:10px 20px;margin:5; cursor:pointer;}
@@ -64,7 +84,9 @@ button{font-size:18px;padding:10px 20px;margin:5; cursor:pointer;}
 <div id="bg"></div>
 <div id="score">Punti: 0</div>
 <div id="combo">Combo: 0x</div>
+<div id="rank">Rank: F</div>
 <div id="hitLine"></div>
+<div id="accuracyBar"><div id="accuracyFill"></div></div>
 <canvas id="gameCanvas"></canvas>
 
 <div id="menu">
@@ -94,6 +116,8 @@ const settingsBtn=document.getElementById("settingsBtn");
 const hitLine=document.getElementById("hitLine");
 const bg=document.getElementById("bg");
 const keySettings=document.getElementById("keySettings");
+const accuracyFill=document.getElementById("accuracyFill");
+const rankDisplay=document.getElementById("rank");
 
 canvas.width=window.innerWidth;
 canvas.height=window.innerHeight;
@@ -102,6 +126,8 @@ let notes=[];
 let score=0;
 let combo=0;
 let gameRunning=false;
+let totalHits=0;
+let totalPerfect=0;
 
 // --- Config colonne e tasti ---
 const columns = 4;
@@ -116,8 +142,6 @@ let noteCooldown=0.25;
 // --- Disegna note ---
 function drawNotes(currentTime){
     ctx.clearRect(0,0,canvas.width,canvas.height);
-
-    // Linee colonne
     for(let i=1;i<columns;i++){
         ctx.strokeStyle="rgba(200,200,200,0.3)";
         ctx.lineWidth=2;
@@ -126,22 +150,18 @@ function drawNotes(currentTime){
         ctx.lineTo(i*columnWidth,canvas.height);
         ctx.stroke();
     }
-
-    // Etichette tasti sotto
     for(let i=0;i<columns;i++){
         const x=i*columnWidth+columnWidth/2;
         const label=document.getElementById("label"+i);
         if(label) label.style.left=x+"px";
     }
-
-    // Note
     ctx.fillStyle='red';
     notes.forEach(note=>{
         if(note.hit) return;
         const y=(currentTime - note.time)*noteSpeed;
         if(y > canvas.height) return;
         const size=columnWidth-20;
-        const height=20;
+        const height=30; // note leggermente più grandi
         ctx.fillRect(note.column*columnWidth+10, y, size, height);
     });
 }
@@ -150,6 +170,18 @@ function drawNotes(currentTime){
 function animateHitLine(){
     hitLine.style.background="rgba(255,255,255,1)";
     setTimeout(()=>{hitLine.style.background="rgba(255,255,255,0.5)";},100);
+}
+
+// --- Aggiorna rank e accuracy ---
+function updateRank(){
+    let accuracy = totalHits>0 ? totalPerfect/totalHits : 0;
+    accuracyFill.style.width = (accuracy*100)+"%";
+    let rank = "F";
+    if(score>9000) rank="S";
+    else if(score>7000) rank="A";
+    else if(score>5000) rank="B";
+    else if(score>3000) rank="C";
+    rankDisplay.innerText="Rank: "+rank;
 }
 
 // --- Controllo tasti ---
@@ -162,21 +194,24 @@ document.addEventListener("keydown",e=>{
     notes.forEach(note=>{
         if(note.hit) return;
         const y=(currentTime - note.time)*noteSpeed;
-        if(y>=canvas.height-90 && y<=canvas.height-50 && e.code===columnCodes[note.column]){
+        if(y>=canvas.height-110 && y<=canvas.height-50 && e.code===columnCodes[note.column]){
             note.hit=true;
             hit=true;
+            totalHits++;
+            // calcolo accuracy in base a distanza dal centro hit line
+            const dist=Math.abs(y-(canvas.height-70));
+            if(dist<10){score+=100; totalPerfect++;} 
+            else if(dist<20) score+=70;
+            else score+=50;
         }
     });
-    if(hit){
-        combo++; score+=100*combo;
-        animateHitLine();
-    } else {combo=0;}
+    if(hit){combo++; animateHitLine();}
+    else combo=0;
     document.getElementById("score").innerText="Punti: "+score;
     document.getElementById("combo").innerText="Combo: "+combo+"x";
+    updateRank();
 });
-document.addEventListener("keyup",e=>{
-    keysPressed[e.code]=false;
-});
+document.addEventListener("keyup",e=>{keysPressed[e.code]=false;});
 
 // --- Generazione note ---
 let audioCtx, analyser, source, dataArray;
@@ -224,11 +259,8 @@ startBtn.addEventListener("click",()=>{
         case "difficile": noteSpeed=500; noteCooldown=0.15; break;
         default: noteSpeed=400; noteCooldown=0.25;
     }
-
     gameRunning=true;
     document.getElementById("menu").style.display="none";
-
-    // crea label tasti
     for(let i=0;i<columns;i++){
         let label=document.createElement("div");
         label.id="label"+i;
@@ -236,7 +268,6 @@ startBtn.addEventListener("click",()=>{
         label.innerText=columnKeys[i];
         document.body.appendChild(label);
     }
-
     setupAudio();
     bg.style.opacity=1;
     setTimeout(()=>{
@@ -245,7 +276,6 @@ startBtn.addEventListener("click",()=>{
         bgm.currentTime=0;
         bgm.play();
     },500);
-
     generateNotes();
     requestAnimationFrame(gameLoop);
 });
@@ -254,8 +284,6 @@ startBtn.addEventListener("click",()=>{
 settingsBtn.addEventListener("click",()=>{
     keySettings.style.display = keySettings.style.display==="none"?"block":"none";
 });
-
-// cliccare su cella per cambiare tasto
 for(let i=0;i<columns;i++){
     document.getElementById("col"+i).addEventListener("click",()=>{
         const newKey = prompt("Inserisci nuovo tasto per colonna "+(i+1), columnKeys[i]);
