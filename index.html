@@ -3,51 +3,43 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>gioco figo idk</title>
+<title>Rhythm Game BPM</title>
 <style>
+/* ---------------------------- */
 body {margin:0;overflow:hidden;font-family:Arial;background:black;color:white;}
 #score,#combo,#rank{position:absolute;top:10px;font-size:24px;z-index:10;}
-#score{left:10px;} 
-#combo{left:200px;} 
-#rank{left:400px;}
+#score{left:10px;} #combo{left:200px;} #rank{left:400px;}
 #gameCanvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;}
-#bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-2;background:center center/cover no-repeat;filter:brightness(0.3) blur(4px);opacity:0;transition:opacity 1s ease-in;}
-#hitLine{position:absolute;bottom:70px;left:0;width:100%;height:3px;background:rgba(255,255,255,0.5);z-index:5;opacity:0;}
-#accuracyBar{position:absolute;bottom:50px;left:50%;transform:translateX(-50%);width:300px;height:8px;background:rgba(255,255,255,0.2);border-radius:4px;overflow:hidden;z-index:5;}
+#bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-2;
+    background:center center/cover no-repeat;filter:brightness(0.3) blur(4px);opacity:0;transition:opacity 1s ease-in;}
+#hitLine{position:absolute;bottom:70px;left:0;width:100%;height:3px;
+    background:rgba(255,255,255,0.5);z-index:5;opacity:0;}
+#accuracyBar{position:absolute;bottom:50px;left:50%;transform:translateX(-50%);
+    width:300px;height:8px;background:rgba(255,255,255,0.2);border-radius:4px;
+    overflow:hidden;z-index:5;}
 #accuracyFill{width:0%;height:100%;background:lime;transition:width 0.1s;}
 #menu{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;text-align:center;}
-button, select{font-size:18px;padding:10px 20px;margin:5; cursor:pointer;}
-.columnLabel{position:absolute;bottom:30px;font-size:20px;color:rgba(255,255,255,0.7);width:100px;text-align:center;transform:translateX(-50%);pointer-events:none;}
-#keySettings{position:absolute;top:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);padding:10px 15px;border-radius:8px;display:none;z-index:20;}
-#keySettings table{border-collapse:collapse;}
-#keySettings td{border:1px solid rgba(255,255,255,0.3);padding:8px 15px;text-align:center;cursor:pointer;color:white;font-weight:bold;}
+button, select{font-size:18px;padding:10px 20px;margin:5;cursor:pointer;}
+.columnLabel{position:absolute;bottom:30px;font-size:20px;color:rgba(255,255,255,0.7);
+    width:100px;text-align:center;transform:translateX(-50%);pointer-events:none;}
+#keySettings{position:absolute;top:60px;left:50%;transform:translateX(-50%);
+    background:rgba(0,0,0,0.7);padding:10px 15px;border-radius:8px;display:none;z-index:20;}
+#keySettings td{border:1px solid rgba(255,255,255,0.3);padding:8px 15px;text-align:center;
+    cursor:pointer;color:white;font-weight:bold;}
 #keySettings td:hover{background:rgba(255,255,255,0.2);}
-#difficultyBar{
-    position:absolute;
-    top:calc(50% - 100px); 
-    left:50%;
-    transform:translateX(-50%);
-    height:25px;
-    width:200px;
-    background:gray;
-    border-radius:5px;
-    text-align:center;
-    line-height:25px;
-    color:black;
-    font-weight:bold;
-    z-index:15;
-}
+#difficultyBar{position:absolute;top:calc(50% - 100px);left:50%;transform:translateX(-50%);
+    height:25px;width:200px;background:gray;border-radius:5px;text-align:center;
+    line-height:25px;color:black;font-weight:bold;z-index:15;}
 #rainbowBorder {
-  position:fixed;
-  top:0; left:0; width:100%; height:100%;
-  pointer-events:none; z-index:50;
+  position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:50;
   background: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet);
-  background-size: 200% 200%;
-  animation: rainbowMove 5s linear infinite;
-  opacity:0;
-  transition:opacity 0.5s;
+  background-size: 200% 200%;animation: rainbowMove 5s linear infinite;
+  opacity:0;transition:opacity 0.5s;
 }
-@keyframes rainbowMove { from {background-position: 0 0;} to {background-position: 200% 0;} }
+@keyframes rainbowMove {
+  from {background-position: 0 0;}
+  to {background-position: 200% 0;}
+}
 </style>
 </head>
 <body>
@@ -72,14 +64,10 @@ button, select{font-size:18px;padding:10px 20px;margin:5; cursor:pointer;}
 <button id="startBtn">Start</button>
 <button id="settingsBtn">Impostazioni</button>
 <div id="keySettings">
-    <table>
-        <tr>
-            <td id="col0">D</td>
-            <td id="col1">F</td>
-            <td id="col2">J</td>
-            <td id="col3">K</td>
-        </tr>
-    </table>
+    <table><tr>
+      <td id="col0">D</td><td id="col1">F</td>
+      <td id="col2">J</td><td id="col3">K</td>
+    </tr></table>
     <small>Clicca su un tasto per cambiarlo</small>
 </div>
 </div>
@@ -87,6 +75,8 @@ button, select{font-size:18px;padding:10px 20px;margin:5; cursor:pointer;}
 <audio id="bgm" crossorigin="anonymous"></audio>
 
 <script>
+// ⬇️ Tutto il JS è qui dentro ⬇️
+
 window.onload = function() {
 const canvas=document.getElementById("gameCanvas");
 const ctx=canvas.getContext("2d");
@@ -116,14 +106,14 @@ const columnWidth=canvas.width/columns;
 let noteSpeed=400;
 
 const songs={
-    "BIRDBRAIN":{mp3:"BIRDBRAIN.mp3", bg:"immagine_2026-03-03_204259655.png", BPM:140, difficulty:"MEDIO", color:"yellow", speed:400},
-    "Mesmerizer":{mp3:"mesmerizer.mp3", bg:"immagine_2026-03-03_221829535.png", BPM:120, difficulty:"DIFFICILE", color:"red", speed:500}
+  "BIRDBRAIN":{mp3:"BIRDBRAIN.mp3", bg:"immagine_2026-03-03_204259655.png", BPM:140, difficulty:"MEDIO", color:"yellow", speed:400},
+  "Mesmerizer":{mp3:"mesmerizer.mp3", bg:"immagine_2026-03-03_221829535.png", BPM:120, difficulty:"DIFFICILE", color:"red", speed:500}
 };
 let currentSong = songs[songSelector.value];
 
 function updateDifficultyDisplay(){
     difficultyBar.style.background = currentSong.color;
-    difficultyBar.innerText = currentSong.difficulty.toUpperCase();
+    difficultyBar.innerText = currentSong.difficulty;
 }
 updateDifficultyDisplay();
 
@@ -137,8 +127,7 @@ songSelector.addEventListener("change", () => {
 
 startBtn.addEventListener("click",()=>{
     if(gameRunning) return;
-    notes=[];
-    lastBeat=0;
+    notes=[ ]; lastBeat=0;
     score=0; combo=0; totalHits=0; totalPerfect=0;
 
     const bgImg=new Image();
@@ -164,26 +153,27 @@ startBtn.addEventListener("click",()=>{
 
 settingsBtn.addEventListener("click",()=>{keySettings.style.display = keySettings.style.display==="none"?"block":"none";});
 for(let i=0;i<columns;i++){
-    document.getElementById("col"+i).addEventListener("click",()=>{
-        const newKey=prompt("Inserisci nuovo tasto per colonna "+(i+1), columnKeys[i]);
-        if(newKey){ columnKeys[i]=newKey.toUpperCase(); columnCodes[i]="Key"+newKey.toUpperCase(); document.getElementById("col"+i).innerText=columnKeys[i]; }
-    });
-});
+  document.getElementById("col"+i).addEventListener("click",()=>{
+    const newKey=prompt("Inserisci nuovo tasto per colonna "+(i+1), columnKeys[i]);
+    if(newKey){ columnKeys[i]=newKey.toUpperCase(); columnCodes[i]="Key"+newKey.toUpperCase(); document.getElementById("col"+i).innerText=columnKeys[i]; }
+  });
+}
 
 let BPM=currentSong.BPM;
 let beatInterval=60/BPM;
 let lastBeat=0;
+
 function generateNotes(currentTime){
     while(currentTime - lastBeat >= beatInterval){
         const col=Math.floor(Math.random()*columns);
-        const yOffset = Math.random()*40-20;
+        const yOffset=Math.random()*40-20;
         notes.push({time:currentTime,column:col,hit:false,y:-30+yOffset});
         lastBeat += beatInterval*(0.7+Math.random()*0.6);
     }
 }
 
 function spawnParticles(x, y){
-    for(let i=0; i<8; i++){
+    for(let i=0;i<8;i++){
         particles.push({
             x: x + columnWidth/2,
             y: y + 15,
@@ -191,7 +181,7 @@ function spawnParticles(x, y){
             vy: (Math.random()-1.5)*4,
             alpha: 1,
             size: Math.random()*6+4,
-            color: `hsl(${Math.random()*360}, 80%, 60%)`
+            hue: Math.random()*360
         });
     }
 }
@@ -214,29 +204,21 @@ function drawNotes(deltaTime){
         ctx.fillStyle="red";
         ctx.fillRect(note.column*columnWidth+10,note.y,columnWidth-20,30);
     });
-    for(let i=0;i<columns;i++){
-        const x=i*columnWidth+columnWidth/2;
-        const label=document.getElementById("label"+i);
-        if(label) label.style.left=x+"px";
-    }
-
-    for(let i=particles.length-1; i>=0; i--){
-        const p = particles[i];
-        ctx.fillStyle = `hsla(${p.color.match(/\d+/g)[0]},80%,60%,${p.alpha})`;
+    for(let i=particles.length-1;i>=0;i--){
+        const p=particles[i];
+        ctx.fillStyle=`hsla(${p.hue},80%,60%,${p.alpha})`;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+        ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
         ctx.fill();
-        p.x += p.vx;
-        p.y += p.vy;
-        p.alpha -= 0.03;
-        if(p.alpha <=0) particles.splice(i,1);
+        p.x+=p.vx; p.y+=p.vy; p.alpha-=0.03;
+        if(p.alpha<=0)particles.splice(i,1);
     }
 }
 
 function animateHitLine(){hitLine.style.background="rgba(255,255,255,1)"; setTimeout(()=>{hitLine.style.background="rgba(255,255,255,0.5)";},100);}
 
 function updateRank(){
-    let accuracy=totalHits>0 ? totalPerfect/totalHits : 0;
+    let accuracy=totalHits>0? totalPerfect/totalHits:0;
     accuracyFill.style.width=(accuracy*100)+"%";
     let rank="F";
     if(score>9000) rank="S";
@@ -244,28 +226,28 @@ function updateRank(){
     else if(score>5000) rank="B";
     else if(score>3000) rank="C";
     rankDisplay.innerText="Rank: "+rank;
-
     rainbowBorder.style.opacity=(rank==="S")?1:0;
 }
 
 let keysPressed={};
 document.addEventListener("keydown",e=>{
-    if(keysPressed[e.code]) return;
+    if(keysPressed[e.code])return;
     keysPressed[e.code]=true;
     let hit=false;
     notes.forEach(note=>{
-        if(note.hit) return;
-        const y=note.y;
-        if(y>=canvas.height-110 && y<=canvas.height-50 && e.code===columnCodes[note.column]){
+        if(note.hit)return;
+        if(note.y>=canvas.height-110 && note.y<=canvas.height-50 && e.code===columnCodes[note.column]){
             note.hit=true;
             hit=true;
             totalHits++;
-            const dist=Math.abs(y-(canvas.height-70));
-            if(dist<10){score+=100; totalPerfect++;} else if(dist<20) score+=70; else score+=50;
-            spawnParticles(note.column*columnWidth, note.y);
+            const dist=Math.abs(note.y-(canvas.height-70));
+            if(dist<10){score+=100; totalPerfect++;}
+            else if(dist<20)score+=70;
+            else score+=50;
+            spawnParticles(note.column*columnWidth,note.y);
         }
     });
-    if(hit){combo++; animateHitLine();} else combo=0;
+    if(hit){combo++;animateHitLine();}else combo=0;
     document.getElementById("score").innerText="Punti: "+score;
     document.getElementById("combo").innerText="Combo: "+combo+"x";
     updateRank();
@@ -274,14 +256,14 @@ document.addEventListener("keyup",e=>{keysPressed[e.code]=false;});
 
 let lastTime=0;
 function gameLoop(timestamp){
-    if(!gameRunning) return;
+    if(!gameRunning)return;
     const deltaTime=(timestamp-lastTime)/1000;
     lastTime=timestamp;
     generateNotes(bgm.currentTime);
     drawNotes(deltaTime);
     requestAnimationFrame(gameLoop);
 }
-};
+}; // --------- load end
 </script>
 </body>
 </html>
