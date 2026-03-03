@@ -23,11 +23,29 @@ button, select{font-size:18px;padding:10px 20px;margin:5; cursor:pointer;}
 #keySettings td{border:1px solid rgba(255,255,255,0.3);padding:8px 15px;text-align:center;cursor:pointer;color:white;font-weight:bold;}
 #keySettings td:hover{background:rgba(255,255,255,0.2);}
 #difficultyBar{position:absolute;top:50px;left:50%;transform:translateX(-50%);height:25px;width:200px;background:gray;border-radius:5px;text-align:center;line-height:25px;color:black;font-weight:bold;z-index:15;}
+#rainbowBorder {
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  z-index:50;
+  background:conic-gradient(red,orange,yellow,green,blue,indigo,violet,red);
+  opacity:0;
+  transition:opacity 0.5s;
+  animation:rotateRainbow 5s linear infinite;
+}
+@keyframes rotateRainbow {
+  from {transform:rotate(0deg);}
+  to {transform:rotate(360deg);}
+}
 </style>
 </head>
 <body>
 
 <div id="bg"></div>
+<div id="rainbowBorder"></div>
 <canvas id="gameCanvas"></canvas>
 
 <div id="score">Punti: 0</div>
@@ -74,6 +92,7 @@ const accuracyFill=document.getElementById("accuracyFill");
 const rankDisplay=document.getElementById("rank");
 const hitLine=document.getElementById("hitLine");
 const difficultyBar=document.getElementById("difficultyBar");
+const rainbowBorder=document.getElementById("rainbowBorder");
 
 canvas.width=window.innerWidth;
 canvas.height=window.innerHeight;
@@ -86,9 +105,9 @@ const columns=4;
 let columnKeys=["D","F","J","K"];
 let columnCodes=["KeyD","KeyF","KeyJ","KeyK"];
 const columnWidth=canvas.width/columns;
-let noteSpeed=400; // default
+let noteSpeed=400;
 
-// --- Song info con BPM e sfondi ---
+// --- Song info ---
 const songs={
     "BIRDBRAIN":{mp3:"BIRDBRAIN.mp3", bg:"immagine_2026-03-03_204259655.png", BPM:140, difficulty:"MEDIO", color:"yellow", speed:400},
     "Mesmerizer":{mp3:"mesmerizer.mp3", bg:"immagine_2026-03-03_221829535.png", BPM:120, difficulty:"DIFFICILE", color:"red", speed:500}
@@ -147,16 +166,16 @@ for(let i=0;i<columns;i++){
     });
 }
 
-// --- Generazione note BPM ---
+// --- Generazione note con intervallo irregolare ---
 let BPM=currentSong.BPM;
 let beatInterval=60/BPM;
 let lastBeat=0;
-
 function generateNotes(currentTime){
     while(currentTime - lastBeat >= beatInterval){
         const col=Math.floor(Math.random()*columns);
-        notes.push({time:currentTime,column:col,hit:false,y:-30});
-        lastBeat+=beatInterval;
+        const yOffset = Math.random()*40-20; // distanza casuale
+        notes.push({time:currentTime,column:col,hit:false,y:-30+yOffset});
+        lastBeat += beatInterval*(0.7+Math.random()*0.6); // intervallo irregolare
     }
 }
 
@@ -200,12 +219,7 @@ function updateRank(){
     else if(score>3000) rank="C";
     rankDisplay.innerText="Rank: "+rank;
 
-    if(rank==="S"){
-        document.body.style.border="10px solid";
-        document.body.style.borderImage="linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet) 1";
-    }else{
-        document.body.style.border="none";
-    }
+    rainbowBorder.style.opacity=(rank==="S")?1:0;
 }
 
 // --- Controllo tasti ---
