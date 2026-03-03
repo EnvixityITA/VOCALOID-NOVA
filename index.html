@@ -46,12 +46,8 @@ button, select{font-size:18px;padding:10px 20px;margin:5; cursor:pointer;}
   animation: rainbowMove 5s linear infinite;
   opacity:0;
   transition:opacity 0.5s;
-  box-shadow: 0 0 20px 10px red, inset 0 0 20px 10px red;
 }
-@keyframes rainbowMove {
-  from {background-position: 0 0;}
-  to {background-position: 200% 0;}
-}
+@keyframes rainbowMove { from {background-position: 0 0;} to {background-position: 200% 0;} }
 </style>
 </head>
 <body>
@@ -91,6 +87,7 @@ button, select{font-size:18px;padding:10px 20px;margin:5; cursor:pointer;}
 <audio id="bgm" crossorigin="anonymous"></audio>
 
 <script>
+window.onload = function() {
 const canvas=document.getElementById("gameCanvas");
 const ctx=canvas.getContext("2d");
 const bg=document.getElementById("bg");
@@ -110,7 +107,7 @@ canvas.height=window.innerHeight;
 
 let notes=[], gameRunning=false;
 let score=0, combo=0, totalHits=0, totalPerfect=0;
-let particles=[]; // particelle kawaii
+let particles=[];
 
 const columns=4;
 let columnKeys=["D","F","J","K"];
@@ -223,7 +220,6 @@ function drawNotes(deltaTime){
         if(label) label.style.left=x+"px";
     }
 
-    // disegna e aggiorna particelle
     for(let i=particles.length-1; i>=0; i--){
         const p = particles[i];
         ctx.fillStyle = `hsla(${p.color.match(/\d+/g)[0]},80%,60%,${p.alpha})`;
@@ -285,6 +281,7 @@ function gameLoop(timestamp){
     drawNotes(deltaTime);
     requestAnimationFrame(gameLoop);
 }
+};
 </script>
 </body>
 </html>
