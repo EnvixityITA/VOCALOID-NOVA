@@ -13,7 +13,6 @@ body {
     color: white;
 }
 
-/* Score e Combo */
 #score, #combo {
     position: absolute;
     top: 10px;
@@ -23,7 +22,6 @@ body {
 #score { left: 10px; }
 #combo { right: 10px; }
 
-/* Canvas note */
 #gameCanvas {
     position: absolute;
     top:0;
@@ -33,7 +31,6 @@ body {
     z-index: 1;
 }
 
-/* Sfondo immagine blurrata e scura */
 #bg {
     position: fixed;
     top:0;
@@ -43,6 +40,16 @@ body {
     z-index: -2;
     background: url('immagine_2026-03-03_204259655.png') center center/cover no-repeat;
     filter: brightness(0.4) blur(4px);
+}
+
+#hitLine {
+    position: absolute;
+    bottom: 70px;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.5);
+    z-index: 5;
 }
 
 button {
@@ -61,73 +68,80 @@ button {
 <div id="bg"></div>
 <div id="score">Punti: 0</div>
 <div id="combo">Combo: 0x</div>
+<div id="hitLine"></div>
 <canvas id="gameCanvas"></canvas>
 
 <audio id="bgm" src="BIRDBRAIN.mp3"></audio>
 <button id="startBtn">Start!</button>
 
 <script>
-// --- Variabili ---
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 const bgm = document.getElementById("bgm");
 const startBtn = document.getElementById("startBtn");
 
-let notes = [];
-let score = 0;
-let combo = 0;
-let maxCombo = 0;
-let gameRunning = false;
-
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// --- Funzioni gioco ---
+let notes = []; // {time: secondi, x: posX, hit: false}
+let score = 0;
+let combo = 0;
+let gameRunning = false;
+
+// --- Esempio sincronizzazione: generiamo note ad intervalli precisi ---
+const bpm = 140; // battiti per minuto
+const beatInterval = 60/bpm; // intervallo in secondi
+const noteSpeed = 400; // px/sec
+const totalBeats = 100; // numero di note da generare
+
+for(let i=0;i<totalBeats;i++){
+    const time = i*beatInterval;
+    const x = Math.random()*(canvas.width-30);
+    notes.push({time:time, x:x, hit:false});
+}
+
+// --- Funzioni ---
 function startGame(){
     if(gameRunning) return;
     gameRunning = true;
     startBtn.style.display = "none";
+    bgm.currentTime = 0;
     bgm.play();
-    spawnNotes();
     requestAnimationFrame(gameLoop);
 }
 
-// Genera note
-function spawnNotes(){
-    if(!gameRunning) return;
-    const x = Math.random()*(canvas.width-30);
-    notes.push({x:x, y:0, width:30, height:30});
-    setTimeout(spawnNotes, 800); // ogni 0.8s
-}
-
-// Disegna note
-function drawNotes(){
+function drawNotes(currentTime){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle = 'red';
     notes.forEach(note=>{
-        ctx.fillRect(note.x,note.y,note.width,note.height);
-        note.y += 4;
+        if(note.hit) return;
+        // posizione y in base al tempo corrente
+        const y = (note.time - currentTime)*noteSpeed + (canvas.height-70);
+        if(y < 0) return;
+        ctx.fillRect(note.x, y, 30, 30);
     });
 }
 
-// --- Controllo barra spaziatrice: singolo colpo per pressione ---
+// Controllo barra spaziatrice singolo colpo
 let keyPressed = false;
 document.addEventListener("keydown", function(e){
     if(e.code==="Space" && !keyPressed){
         keyPressed = true;
+        const currentTime = bgm.currentTime;
         let hit = false;
-        notes.forEach((note,index)=>{
-            if(note.y + note.height >= canvas.height - 70 && note.y <= canvas.height - 40){
-                notes.splice(index,1);
+        notes.forEach(note=>{
+            if(note.hit) return;
+            const y = (note.time - currentTime)*noteSpeed + (canvas.height-70);
+            if(y >= canvas.height-80 && y <= canvas.height-60){
+                note.hit = true;
                 hit = true;
             }
         });
         if(hit){
             combo +=1;
-            if(combo>maxCombo) maxCombo=combo;
-            score += 100 * combo; // moltiplicatore
+            score += 100 * combo;
         } else {
-            combo = 0; // reset combo se fallisci
+            combo = 0;
         }
         document.getElementById("score").innerText = "Punti: " + score;
         document.getElementById("combo").innerText = "Combo: " + combo + "x";
@@ -137,16 +151,14 @@ document.addEventListener("keyup", function(e){
     if(e.code==="Space") keyPressed = false;
 });
 
-// --- Loop principale ---
 function gameLoop(){
     if(!gameRunning) return;
-    drawNotes();
+    const currentTime = bgm.currentTime;
+    drawNotes(currentTime);
     requestAnimationFrame(gameLoop);
 }
 
-// --- Start button ---
 startBtn.addEventListener("click", startGame);
 </script>
-
 </body>
 </html>
