@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BIRDBRAIN 4 Colonne</title>
+<title>BIRDBRAIN 4 Colonne con UI</title>
 <style>
 body {margin:0;overflow:hidden;font-family:Arial;background:black;color:white;}
 #score,#combo{position:absolute;top:10px;font-size:24px;z-index:10;}
@@ -18,7 +18,7 @@ body {margin:0;overflow:hidden;font-family:Arial;background:black;color:white;}
     bottom:70px;
     left:0;
     width:100%;
-    height:6px;
+    height:3px; /* più piccola */
     background:rgba(255,255,255,0.5);
     z-index:5;
     opacity:0;
@@ -26,6 +26,16 @@ body {margin:0;overflow:hidden;font-family:Arial;background:black;color:white;}
 }
 #menu{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;text-align:center;}
 button{font-size:18px;padding:10px 20px;margin:5;}
+.columnLabel{
+    position:absolute;
+    bottom:30px;
+    font-size:20px;
+    color:rgba(255,255,255,0.7);
+    width:100px;
+    text-align:center;
+    transform:translateX(-50%);
+    pointer-events:none;
+}
 </style>
 </head>
 <body>
@@ -62,7 +72,8 @@ let gameRunning=false;
 
 // --- Config colonne e tasti ---
 const columns = 4;
-const columnKeys = ["KeyD","KeyF","KeyJ","KeyK"]; // tasti per colonna
+const columnKeys = ["D","F","J","K"]; // tasti per colonna
+const columnCodes = ["KeyD","KeyF","KeyJ","KeyK"]; 
 const columnWidth = canvas.width/columns;
 
 // Parametri difficoltà
@@ -72,13 +83,32 @@ let noteCooldown=0.25;
 // --- Disegna note ---
 function drawNotes(currentTime){
     ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // Disegna linee colonne e tasti sotto
+    for(let i=1;i<columns;i++){
+        ctx.strokeStyle="rgba(200,200,200,0.3)";
+        ctx.lineWidth=2;
+        ctx.beginPath();
+        ctx.moveTo(i*columnWidth,0);
+        ctx.lineTo(i*columnWidth,canvas.height);
+        ctx.stroke();
+    }
+    // disegna tasti sotto
+    for(let i=0;i<columns;i++){
+        const x=i*columnWidth+columnWidth/2;
+        const label=document.getElementById("label"+i);
+        label.style.left=x+"px";
+    }
+
+    // note
     ctx.fillStyle='red';
     notes.forEach(note=>{
         if(note.hit) return;
         const y=(currentTime - note.time)*noteSpeed;
         if(y > canvas.height) return;
-        const size=columnWidth-20; // larghezza nota in base alla colonna
-        ctx.fillRect(note.column*columnWidth+10, y, size, 30); // rettangolo rosso
+        const size=columnWidth-20; // leggermente più stretto
+        const height=20; // più piccolo
+        ctx.fillRect(note.column*columnWidth+10, y, size, height);
     });
 }
 
@@ -98,7 +128,7 @@ document.addEventListener("keydown",e=>{
     notes.forEach(note=>{
         if(note.hit) return;
         const y=(currentTime - note.time)*noteSpeed;
-        if(y>=canvas.height-110 && y<=canvas.height-50 && e.code===columnKeys[note.column]){
+        if(y>=canvas.height-90 && y<=canvas.height-50 && e.code===columnCodes[note.column]){
             note.hit=true;
             hit=true;
         }
@@ -165,6 +195,16 @@ startBtn.addEventListener("click",()=>{
 
     gameRunning=true;
     document.getElementById("menu").style.display="none";
+
+    // crea label tasti per colonne
+    for(let i=0;i<columns;i++){
+        let label=document.createElement("div");
+        label.id="label"+i;
+        label.className="columnLabel";
+        label.innerText=columnKeys[i];
+        document.body.appendChild(label);
+    }
+
     setupAudio();
 
     bg.style.opacity=1;
@@ -181,9 +221,7 @@ startBtn.addEventListener("click",()=>{
 });
 
 settingsBtn.addEventListener("click",()=>{
-    const newKey=prompt("Inserisci il tasto da usare (es. Space, KeyZ, KeyX):","Space");
-    if(newKey) columnKeys[0]=newKey; // puoi aggiungere personalizzazione completa
-    alert("Tasto modificato");
+    alert("Tasti assegnati: D, F, J, K (personalizzazione futura)");
 });
 </script>
 </body>
