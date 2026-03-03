@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BIRDBRAIN Rhythm Auto</title>
+<title>BIRDBRAIN Rhythm Auto Ritardo</title>
 <style>
 body {margin:0;overflow:hidden;font-family:Arial;background:black;color:white;}
 #score,#combo{position:absolute;top:10px;font-size:24px;z-index:10;}
@@ -12,7 +12,7 @@ body {margin:0;overflow:hidden;font-family:Arial;background:black;color:white;}
 #bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-2;
     background:url('immagine_2026-03-03_204259655.png') center center/cover no-repeat;
     filter:brightness(0.4) blur(4px);}
-#hitLine{position:absolute;bottom:70px;left:0;width:100%;height:4px;background:rgba(255,255,255,0.5);z-index:5;}
+#hitLine{position:absolute;bottom:70px;left:0;width:100%;height:4px;background:rgba(255,255,255,0.5);z-index:5; display:none;}
 #menu{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;}
 button{font-size:18px;padding:10px 20px;margin:5;}
 </style>
@@ -38,10 +38,12 @@ const ctx=canvas.getContext("2d");
 const bgm=document.getElementById("bgm");
 const startBtn=document.getElementById("startBtn");
 const settingsBtn=document.getElementById("settingsBtn");
+const hitLine = document.getElementById("hitLine");
+
 canvas.width=window.innerWidth;
 canvas.height=window.innerHeight;
 
-let notes=[]; // {x,hit,time}
+let notes=[];
 let score=0;
 let combo=0;
 let gameRunning=false;
@@ -109,7 +111,7 @@ document.addEventListener("keyup",e=>{
     if(e.code===hitKey) keyPressed=false;
 });
 
-// --- Generazione note automatica in base al volume ---
+// --- Generazione note automatica ---
 let audioCtx, analyser, source, dataArray;
 function setupAudio() {
     audioCtx=new (window.AudioContext||window.webkitAudioContext)();
@@ -127,7 +129,7 @@ function generateNotes() {
     let sum=0;
     for(let i=0;i<dataArray.length;i++) sum+=dataArray[i];
     const avg=sum/dataArray.length;
-    if(avg>150){ // soglia per trigger nota
+    if(avg>150){
         const x=Math.random()*(canvas.width-50)+25;
         notes.push({x:x,hit:false,time:bgm.currentTime+(canvas.height-70)/400});
     }
@@ -148,11 +150,14 @@ startBtn.addEventListener("click",()=>{
     gameRunning=true;
     document.getElementById("menu").style.display="none";
     setupAudio();
-    // La canzone parte dall'inizio (0 secondi)
-    bgm.currentTime=0;
-    bgm.play();
-    generateNotes();
-    requestAnimationFrame(gameLoop);
+    // Ritardo iniziale 1.5 secondi
+    setTimeout(()=>{
+        hitLine.style.display = "block";
+        bgm.currentTime=0;
+        bgm.play();
+        generateNotes();
+        requestAnimationFrame(gameLoop);
+    }, 1500);
 });
 
 settingsBtn.addEventListener("click",()=>{
