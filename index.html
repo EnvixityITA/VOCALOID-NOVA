@@ -22,6 +22,7 @@ button, select{font-size:18px;padding:10px 20px;margin:5; cursor:pointer;}
 #keySettings table{border-collapse:collapse;}
 #keySettings td{border:1px solid rgba(255,255,255,0.3);padding:8px 15px;text-align:center;cursor:pointer;color:white;font-weight:bold;}
 #keySettings td:hover{background:rgba(255,255,255,0.2);}
+#difficultyBar{position:absolute;top:50px;left:50%;transform:translateX(-50%);height:25px;width:200px;background:gray;border-radius:5px;text-align:center;line-height:25px;color:black;font-weight:bold;z-index:15;}
 </style>
 </head>
 <body>
@@ -34,6 +35,8 @@ button, select{font-size:18px;padding:10px 20px;margin:5; cursor:pointer;}
 <div id="rank">Rank: F</div>
 <div id="hitLine"></div>
 <div id="accuracyBar"><div id="accuracyFill"></div></div>
+
+<div id="difficultyBar">DIFFICOLTÀ</div>
 
 <div id="menu">
 <select id="songSelector">
@@ -70,6 +73,7 @@ const keySettings=document.getElementById("keySettings");
 const accuracyFill=document.getElementById("accuracyFill");
 const rankDisplay=document.getElementById("rank");
 const hitLine=document.getElementById("hitLine");
+const difficultyBar=document.getElementById("difficultyBar");
 
 canvas.width=window.innerWidth;
 canvas.height=window.innerHeight;
@@ -82,15 +86,29 @@ const columns=4;
 let columnKeys=["D","F","J","K"];
 let columnCodes=["KeyD","KeyF","KeyJ","KeyK"];
 const columnWidth=canvas.width/columns;
-let noteSpeed=400; // velocità note px/sec
+let noteSpeed=400; // default
 
 // --- Song info con BPM e sfondi ---
 const songs={
-    "BIRDBRAIN":{mp3:"BIRDBRAIN.mp3", bg:"immagine_2026-03-03_204259655.png", BPM:140},
-    "Mesmerizer":{mp3:"mesmerizer.mp3", bg:"immagine_2026-03-03_221829535.png", BPM:120}
+    "BIRDBRAIN":{mp3:"BIRDBRAIN.mp3", bg:"immagine_2026-03-03_204259655.png", BPM:140, difficulty:"MEDIO", color:"yellow", speed:400},
+    "Mesmerizer":{mp3:"mesmerizer.mp3", bg:"immagine_2026-03-03_221829535.png", BPM:120, difficulty:"DIFFICILE", color:"red", speed:500}
 };
 let currentSong = songs[songSelector.value];
-songSelector.addEventListener("change",()=>{currentSong = songs[songSelector.value]; BPM=currentSong.BPM; beatInterval=60/BPM;});
+
+// --- Aggiorna barra difficoltà e velocità note ---
+function updateDifficultyDisplay(){
+    difficultyBar.style.background=currentSong.color;
+    difficultyBar.innerText=currentSong.difficulty;
+    noteSpeed=currentSong.speed;
+}
+updateDifficultyDisplay();
+
+songSelector.addEventListener("change",()=>{
+    currentSong = songs[songSelector.value];
+    BPM=currentSong.BPM;
+    beatInterval=60/BPM;
+    updateDifficultyDisplay();
+});
 
 // --- Start game ---
 startBtn.addEventListener("click",()=>{
@@ -98,13 +116,11 @@ startBtn.addEventListener("click",()=>{
     notes=[];
     lastBeat=0;
     score=0; combo=0; totalHits=0; totalPerfect=0;
-    // Carica sfondo
-    const bgImg = new Image();
-    bgImg.src = currentSong.bg;
-    bgImg.onload = () => {
-        bg.style.backgroundImage = `url('${currentSong.bg}')`;
-        bg.style.opacity=1;
-    };
+
+    const bgImg=new Image();
+    bgImg.src=currentSong.bg;
+    bgImg.onload=()=>{ bg.style.backgroundImage=`url('${currentSong.bg}')`; bg.style.opacity=1; };
+
     bgm.src=currentSong.mp3;
     bgm.currentTime=0;
     bgm.play();
@@ -126,54 +142,43 @@ startBtn.addEventListener("click",()=>{
 settingsBtn.addEventListener("click",()=>{keySettings.style.display = keySettings.style.display==="none"?"block":"none";});
 for(let i=0;i<columns;i++){
     document.getElementById("col"+i).addEventListener("click",()=>{
-        const newKey = prompt("Inserisci nuovo tasto per colonna "+(i+1), columnKeys[i]);
+        const newKey=prompt("Inserisci nuovo tasto per colonna "+(i+1), columnKeys[i]);
         if(newKey){ columnKeys[i]=newKey.toUpperCase(); columnCodes[i]="Key"+newKey.toUpperCase(); document.getElementById("col"+i).innerText=columnKeys[i]; }
     });
 }
 
-// --- Generazione note dinamica BPM ---
-let BPM = currentSong.BPM;
-let beatInterval = 60/BPM;
-let lastBeat = 0;
+// --- Generazione note BPM ---
+let BPM=currentSong.BPM;
+let beatInterval=60/BPM;
+let lastBeat=0;
 
 function generateNotes(currentTime){
     while(currentTime - lastBeat >= beatInterval){
-        const col = Math.floor(Math.random()*columns);
-        notes.push({time:currentTime, column:col, hit:false, y:-30});
-        lastBeat += beatInterval;
+        const col=Math.floor(Math.random()*columns);
+        notes.push({time:currentTime,column:col,hit:false,y:-30});
+        lastBeat+=beatInterval;
     }
 }
 
 // --- Disegna note ---
 function drawNotes(deltaTime){
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    // Linee colonne
     for(let i=1;i<columns;i++){
         ctx.strokeStyle="rgba(200,200,200,0.3)";
         ctx.lineWidth=2;
         ctx.beginPath(); ctx.moveTo(i*columnWidth,0); ctx.lineTo(i*columnWidth,canvas.height); ctx.stroke();
     }
-    // Aggiorna posizione note
     notes.forEach(note=>{
         if(note.hit) return;
-        note.y += noteSpeed*deltaTime;
-
-        // Nota mancata
+        note.y+=noteSpeed*deltaTime;
         if(note.y>canvas.height){ 
-            note.hit = true;
-            totalHits++; 
-            score -= 50;
-            if(score<0) score=0;
-            combo = 0;
+            note.hit=true; totalHits++; score-=50; if(score<0) score=0; combo=0; 
             document.getElementById("score").innerText="Punti: "+score;
-            document.getElementById("combo").innerText="Combo: "+combo+"x";
-            updateRank();
+            document.getElementById("combo").innerText="Combo: "+combo+"x"; updateRank();
         }
-
         ctx.fillStyle="red";
-        ctx.fillRect(note.column*columnWidth+10, note.y, columnWidth-20, 30);
+        ctx.fillRect(note.column*columnWidth+10,note.y,columnWidth-20,30);
     });
-    // Aggiorna label colonne
     for(let i=0;i<columns;i++){
         const x=i*columnWidth+columnWidth/2;
         const label=document.getElementById("label"+i);
@@ -186,8 +191,8 @@ function animateHitLine(){hitLine.style.background="rgba(255,255,255,1)"; setTim
 
 // --- Aggiorna rank e accuracy ---
 function updateRank(){
-    let accuracy = totalHits>0 ? totalPerfect/totalHits : 0;
-    accuracyFill.style.width = (accuracy*100)+"%";
+    let accuracy=totalHits>0 ? totalPerfect/totalHits : 0;
+    accuracyFill.style.width=(accuracy*100)+"%";
     let rank="F";
     if(score>9000) rank="S";
     else if(score>7000) rank="A";
@@ -195,7 +200,6 @@ function updateRank(){
     else if(score>3000) rank="C";
     rankDisplay.innerText="Rank: "+rank;
 
-    // Bordo arcobaleno se S
     if(rank==="S"){
         document.body.style.border="10px solid";
         document.body.style.borderImage="linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet) 1";
