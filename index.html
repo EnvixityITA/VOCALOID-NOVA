@@ -6,27 +6,26 @@
 <title>Rhythm Game BPM</title>
 <style>
 body {margin:0;overflow:hidden;font-family:Arial;background:black;color:white;}
-#score,#combo,#rank{position:absolute;top:10px;font-size:24px;z-index:10;}
-#score{left:10px;} #combo{left:200px;} #rank{left:400px;}
 #gameCanvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;}
-#bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-2;background:center center/cover no-repeat;filter:brightness(0.3) blur(4px);opacity:0;transition:opacity 1s ease-in;}
-#hitLine{position:absolute;bottom:70px;left:0;width:100%;height:3px;background:rgba(255,255,255,0.5);z-index:5;opacity:0;}
-#accuracyBar{position:absolute;bottom:50px;left:50%;transform:translateX(-50%);width:300px;height:8px;background:rgba(255,255,255,0.2);border-radius:4px;overflow:hidden;z-index:5;}
-#accuracyFill{width:0%;height:100%;background:lime;transition:width 0.1s;}
-.columnLabel{position:absolute;bottom:30px;font-size:20px;color:rgba(255,255,255,0.7);width:100px;text-align:center;transform:translateX(-50%);pointer-events:none;}
-#keySettings{position:absolute;top:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);padding:10px 15px;border-radius:8px;display:none;z-index:20;}
-#keySettings td{border:1px solid rgba(255,255,255,0.3);padding:8px 15px;text-align:center;cursor:pointer;color:white;font-weight:bold;}
-#keySettings td:hover{background:rgba(255,255,255,0.2);}
-#introScreen {position:fixed; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:100; opacity:1; transition:opacity 1s ease-in-out; background: rgba(0,0,0,0.8);}
+#introScreen {position:fixed; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:100; background: rgba(0,0,0,0.8);}
 #logo {width:400px; opacity:0; animation:logoFadeIn 2s forwards, logoFloat 3s ease-in-out infinite alternate; filter: drop-shadow(0 0 15px white);}
 @keyframes logoFadeIn {to {opacity:1;}}
 @keyframes logoFloat {0% {transform: translateY(0);} 100% {transform: translateY(-20px);}}
 #menuContent {margin-top:20px;text-align:center;background: rgba(0,0,0,0.5);padding:20px 40px;border-radius:10px;}
 #songSelector, #settingsBtn, #startBtnIntro {margin:5px;padding:10px 20px;font-size:18px;cursor:pointer;background: rgba(255,255,255,0.1);color:white;border:2px solid white;border-radius:6px;backdrop-filter: blur(2px);}
 #songTitle {font-size:24px; font-weight:bold; color:white; margin-bottom:5px;}
-#difficultyBadge { display:inline-block; padding:5px 15px; background:yellow; border-radius:8px; cursor:pointer; margin-bottom:5px;}
+#difficultyBadge { display:inline-block; padding:5px 15px; border-radius:8px; cursor:pointer; margin-bottom:5px;}
 #timer { font-size:16px; margin-top:5px; color:white;}
 #showStart {position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:200;display:none;width:300px;}
+#hitLine{position:absolute;bottom:70px;left:0;width:100%;height:3px;background:rgba(255,255,255,0.5);z-index:5;opacity:1;}
+#score,#combo,#rank{position:absolute;top:10px;font-size:24px;z-index:10;}
+#score{left:10px;} #combo{left:200px;} #rank{left:400px;}
+#accuracyBar{position:absolute;bottom:50px;left:50%;transform:translateX(-50%);width:300px;height:8px;background:rgba(255,255,255,0.2);border-radius:4px;overflow:hidden;z-index:5;}
+#accuracyFill{width:0%;height:100%;background:lime;transition:width 0.1s;}
+.columnLabel{position:absolute;bottom:30px;font-size:20px;color:rgba(255,255,255,0.7);width:100px;text-align:center;transform:translateX(-50%);pointer-events:none;}
+#keySettings{position:absolute;top:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);padding:10px 15px;border-radius:8px;display:none;z-index:20;}
+#keySettings td{border:1px solid rgba(255,255,255,0.3);padding:8px 15px;text-align:center;cursor:pointer;color:white;font-weight:bold;}
+#keySettings td:hover{background:rgba(255,255,255,0.2);}
 </style>
 </head>
 <body>
@@ -56,35 +55,34 @@ body {margin:0;overflow:hidden;font-family:Arial;background:black;color:white;}
 
 <img id="showStart" src="SHOW_START.png">
 
-<div id="bg"></div>
 <canvas id="gameCanvas"></canvas>
 
+<div id="hitLine"></div>
 <div id="score">Punti: 0</div>
 <div id="combo">Combo: 0x</div>
 <div id="rank">Rank: F</div>
-<div id="hitLine"></div>
 <div id="accuracyBar"><div id="accuracyFill"></div></div>
-<div id="difficultyBar">DIFFICOLTÀ</div>
 
 <audio id="bgm" crossorigin="anonymous"></audio>
 <audio id="startSfx" src="startSound.mp3" crossorigin="anonymous"></audio>
 
 <script>
-window.onload = function(){
+window.onload=function(){
 const canvas=document.getElementById("gameCanvas");
 const ctx=canvas.getContext("2d");
 canvas.width=window.innerWidth; canvas.height=window.innerHeight;
 
-const bg=document.getElementById("bg");
 const bgm=document.getElementById("bgm");
 const startSfx=document.getElementById("startSfx");
+const showStart=document.getElementById("showStart");
+
 const songSelector=document.getElementById("songSelector");
-const settingsBtn=document.getElementById("settingsBtn");
-const keySettings=document.getElementById("keySettings");
 const difficultyBadge=document.getElementById("difficultyBadge");
 const songTitle=document.getElementById("songTitle");
 const timerElem=document.getElementById("timer");
-const showStart=document.getElementById("showStart");
+const introScreen=document.getElementById("introScreen");
+const settingsBtn=document.getElementById("settingsBtn");
+const keySettings=document.getElementById("keySettings");
 
 const hitLine=document.getElementById("hitLine");
 const scoreDisplay=document.getElementById("score");
@@ -101,8 +99,8 @@ let notes=[], particles=[], hitRatings=[], gameRunning=false;
 let score=0, combo=0, totalHits=0, totalPerfect=0;
 
 const songs={
-"BIRDBRAIN":{mp3:"BIRDBRAIN.mp3", bg:"immagine_2026-03-03_204259655.png", BPM:140, difficulty:"MEDIO", color:"yellow", speed:400},
-"Mesmerizer":{mp3:"mesmerizer.mp3", bg:"immagine_2026-03-03_221829535.png", BPM:120, difficulty:"DIFFICILE", color:"red", speed:500}
+"BIRDBRAIN":{mp3:"BIRDBRAIN.mp3", BPM:140, difficulty:"MEDIO", color:"yellow", speed:400},
+"Mesmerizer":{mp3:"mesmerizer.mp3", BPM:120, difficulty:"DIFFICILE", color:"red", speed:500}
 };
 let currentSong=songs[songSelector.value];
 
@@ -112,28 +110,38 @@ function updateMenuInfo(){
     songTitle.innerText=songSelector.value;
 }
 updateMenuInfo();
+
 songSelector.addEventListener("change",()=>{
-    currentSong=songs[songSelector.value]; updateMenuInfo(); noteSpeed=currentSong.speed;
+    currentSong=songs[songSelector.value];
+    updateMenuInfo();
+    noteSpeed=currentSong.speed;
 });
 
 document.getElementById("startBtnIntro").addEventListener("click",()=>{
     startSfx.currentTime=0; startSfx.play();
     showStart.style.display="block";
-    setTimeout(()=>{showStart.style.display="none"; startGame();},1000);
+    setTimeout(()=>{
+        showStart.style.display="none";
+        startGame();
+    },1000);
 });
 
 function startGame(){
-    document.getElementById("introScreen").style.display="none";
-    notes=[]; particles=[]; hitRatings=[]; score=0; combo=0; totalHits=0; totalPerfect=0;
+    introScreen.style.display="none";
+    notes=[]; particles=[]; hitRatings=[];
+    score=0; combo=0; totalHits=0; totalPerfect=0;
+    noteSpeed=currentSong.speed;
 
-    const bgImg=new Image(); bgImg.src=currentSong.bg;
-    bgImg.onload=()=>{ bg.style.backgroundImage=`url('${currentSong.bg}')`; bg.style.opacity=1;};
-
-    bgm.src=currentSong.mp3; bgm.currentTime=0;
-    bgm.play().catch(()=>{console.log("Autoplay bloccato");});
+    bgm.src=currentSong.mp3;
+    bgm.currentTime=0;
+    bgm.play();
 
     gameRunning=true;
-    noteSpeed=currentSong.speed;
+    lastTime=0;
+    lastBeat=0;
+    BPM=currentSong.BPM;
+    beatInterval=60/BPM;
+    requestAnimationFrame(gameLoop);
 }
 
 settingsBtn.addEventListener("click",()=>{keySettings.style.display = keySettings.style.display==="none"?"block":"none";});
@@ -144,16 +152,12 @@ for(let i=0;i<columns;i++){
   });
 }
 
-let lastTime=0;
-let lastBeat=0;
-let BPM=currentSong.BPM;
-let beatInterval=60/BPM;
+let lastTime=0, lastBeat=0, BPM=currentSong.BPM, beatInterval=60/BPM;
 
 function generateNotes(time){
     while(time-lastBeat>=beatInterval){
         const col=Math.floor(Math.random()*columns);
-        const yOffset=Math.random()*40-20;
-        notes.push({y:-50+yOffset,column:col,hit:false});
+        notes.push({y:-50,column:col,hit:false});
         lastBeat+=beatInterval*(0.7+Math.random()*0.6);
     }
 }
@@ -179,51 +183,53 @@ document.addEventListener("keydown",e=>{
     }
 });
 
-function draw(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+function gameLoop(timestamp){
+    if(!gameRunning) return;
+    const deltaTime=(timestamp-lastTime)/1000;
+    lastTime=timestamp;
 
-    // Notes
+    generateNotes(bgm.currentTime);
+
+    // muove note
+    ctx.clearRect(0,0,canvas.width,canvas.height);
     for(let note of notes){
         if(note.hit) continue;
-        note.y += noteSpeed/60;
-        ctx.fillStyle = "red";
-        ctx.fillRect(note.column*columnWidth+10, note.y, columnWidth-20, 50);
+        note.y += noteSpeed*deltaTime;
+        ctx.fillStyle="red";
+        ctx.fillRect(note.column*columnWidth+10,note.y,columnWidth-20,50);
+        if(note.y>canvas.height) {note.hit=true; combo=0;}
     }
 
-    // Ratings con animazione e glow
-    for(let i=hitRatings.length-1; i>=0; i--){
-        const r = hitRatings[i];
+    // ratings PNG
+    for(let i=hitRatings.length-1;i>=0;i--){
+        const r=hitRatings[i];
         ctx.save();
-        ctx.globalAlpha = r.alpha;
-        const scale = 1 + 0.3 * Math.sin((1-r.alpha)*Math.PI*2);
-        ctx.translate(r.x, r.y);
-        ctx.scale(scale, scale);
-        ctx.shadowColor = "white";
-        ctx.shadowBlur = 20 * r.alpha;
-        ctx.drawImage(r.img, -50, -25, 100, 50);
+        ctx.globalAlpha=r.alpha;
+        const scale=1+0.3*Math.sin((1-r.alpha)*Math.PI*2);
+        ctx.translate(r.x,r.y);
+        ctx.scale(scale,scale);
+        ctx.shadowColor="white"; ctx.shadowBlur=20*r.alpha;
+        ctx.drawImage(r.img,-50,-25,100,50);
         ctx.restore();
-        r.y -= 1.2;
-        r.alpha -= 0.02;
-        if(r.alpha <= 0) hitRatings.splice(i,1);
+        r.y-=1.2; r.alpha-=0.02;
+        if(r.alpha<=0) hitRatings.splice(i,1);
     }
 
-    // Timer
-    const current = bgm.currentTime || 0;
-    const total = bgm.duration || 0;
+    // timer
+    const current=bgm.currentTime||0;
+    const total=bgm.duration||0;
     function formatTime(t){ const m=Math.floor(t/60).toString().padStart(2,'0'); const s=Math.floor(t%60).toString().padStart(2,'0'); return m+":"+s;}
     ctx.save();
-    ctx.font = "20px Arial";
-    ctx.fillStyle = "rgba(0,0,0,0.5)";
-    ctx.fillRect(canvas.width-160, 10, 150, 30);
-    ctx.fillStyle = "white";
-    ctx.shadowColor = "black";
-    ctx.shadowBlur = 4;
-    ctx.fillText(formatTime(current)+" / "+formatTime(total), canvas.width-150, 32);
+    ctx.font="20px Arial";
+    ctx.fillStyle="rgba(0,0,0,0.5)";
+    ctx.fillRect(canvas.width-160,10,150,30);
+    ctx.fillStyle="white";
+    ctx.shadowColor="black"; ctx.shadowBlur=4;
+    ctx.fillText(formatTime(current)+" / "+formatTime(total),canvas.width-150,32);
     ctx.restore();
 
-    requestAnimationFrame(draw);
+    requestAnimationFrame(gameLoop);
 }
-draw();
 };
 </script>
 </body>
