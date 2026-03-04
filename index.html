@@ -3,48 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rhythm Game Pro</title>
+<title>Rhythm Game Funzionale</title>
 <style>
 body{margin:0;overflow:hidden;background:black;font-family:Arial;color:white}
-
-/* Sfondo video/immagine */
-#bgVideo, #bgImg{
-position:absolute;top:50%;left:50%;width:100%;height:100%;
-transform:translate(-50%,-50%);object-fit:cover;z-index:0;opacity:0;transition:opacity 1s;
-}
-
-/* Canvas */
+#bgVideo,#bgImg{position:absolute;top:50%;left:50%;width:100%;height:100%;transform:translate(-50%,-50%);object-fit:cover;z-index:0;opacity:0;transition:opacity 1s;}
 #gameCanvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:2}
-
-/* Menu */
-#menu{
-position:absolute;width:100%;height:100%;display:flex;flex-direction:column;
-justify-content:center;align-items:center;z-index:5;background:rgba(0,0,0,0.7);
-transition:opacity 0.5s ease;
-}
+#menu{position:absolute;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:5;background:rgba(0,0,0,0.7);}
 #logo{width:300px;margin-bottom:20px;animation:logoPulse 2s infinite alternate;}
 @keyframes logoPulse{from{transform:scale(1)}to{transform:scale(1.05)}}
 select,button{padding:12px 25px;margin:10px;font-size:18px;background:rgba(255,255,255,0.1);border:2px solid white;color:white;cursor:pointer;transition:all 0.2s;}
 button:hover,select:hover{background:white;color:black;box-shadow:0 0 15px white;}
-
-/* Hit line */
-#hitLine{
-position:absolute;bottom:70px;left:0;width:100%;height:3px;background:rgba(255,255,255,0.5);z-index:3;
-}
-
-/* SHOW START */
-#showStart{
-position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-width:300px;display:none;z-index:10;
-}
-
-/* RESULTS */
-#results{position:absolute;width:100%;height:100%;display:none;flex-direction:column;
-justify-content:center;align-items:center;z-index:6;background:rgba(0,0,0,0.85);}
+#hitLine{position:absolute;bottom:70px;left:0;width:100%;height:3px;background:rgba(255,255,255,0.5);z-index:3;}
+#showStart{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:300px;display:none;z-index:10;}
+#results{position:absolute;width:100%;height:100%;display:none;flex-direction:column;justify-content:center;align-items:center;z-index:6;background:rgba(0,0,0,0.85);}
 .rank{font-size:120px;animation:pop 0.6s ease;}
 @keyframes pop{0%{transform:scale(0)}100%{transform:scale(1)}}
-
-/* Barre colonne */
 .columnBar{position:absolute;top:0;width:2px;height:100%;background:rgba(255,255,255,0.3);z-index:2;}
 .columnKey{position:absolute;bottom:30px;width:100px;text-align:center;transform:translateX(-50%);font-size:20px;color:rgba(255,255,255,0.8);pointer-events:none;}
 </style>
@@ -73,7 +46,7 @@ justify-content:center;align-items:center;z-index:6;background:rgba(0,0,0,0.85);
 <button onclick="location.reload()">RIGIOCA</button>
 </div>
 
-<audio id="bgm"></audio>
+<audio id="bgm" crossorigin="anonymous"></audio>
 <audio id="startSfx" src="startSound.mp3"></audio>
 
 <script>
@@ -91,7 +64,7 @@ canvas.height=window.innerHeight;
 let gameRunning=false;
 let notes=[];
 let lastTime=0,lastBeat=0,BPM=140,beatInterval=60/140;
-let combo=0,maxCombo=0,totalNotes=0,hitNotes=0,screenShake=0,flashAlpha=0;
+let combo=0,maxCombo=0,totalNotes=0,hitNotes=0,flashAlpha=0;
 
 const columns=4;
 const columnWidth=canvas.width/columns;
@@ -104,7 +77,6 @@ const songs={
 };
 
 let currentSong=songs["BIRDBRAIN"];
-
 document.getElementById("songSelect").onchange=(e)=>{
 currentSong=songs[e.target.value];
 BPM=currentSong.BPM;
@@ -128,7 +100,7 @@ lastBeat=0;
 combo=0;maxCombo=0;totalNotes=0;hitNotes=0;
 gameRunning=true;
 
-// set background
+// impostazione sfondo
 if(currentSong.bgType==="video"){
 bgImg.style.opacity=0;
 bgVideo.src=currentSong.bg;
@@ -143,15 +115,13 @@ bgm.currentTime=0;
 bgm.play();
 requestAnimationFrame(gameLoop);
 
-// create column bars
+// colonne e barre
 for(let i=1;i<columns;i++){
 let bar=document.createElement("div");
 bar.className="columnBar";
 bar.style.left=(i*columnWidth)+"px";
 document.body.appendChild(bar);
 }
-
-// create key labels
 for(let i=0;i<columns;i++){
 let label=document.createElement("div");
 label.className="columnKey";
@@ -161,7 +131,7 @@ document.body.appendChild(label);
 }
 }
 
-// GENERATE NOTES
+// spawn note in base al tempo
 function generateNotes(time){
 while(time-lastBeat>=beatInterval){
 let col=Math.floor(Math.random()*columns);
@@ -171,7 +141,7 @@ totalNotes++;
 }
 }
 
-// INPUT
+// input
 let keysPressed={};
 document.addEventListener("keydown",e=>{
 if(keysPressed[e.code])return;
@@ -181,7 +151,7 @@ if(note.hit)continue;
 if(note.y>canvas.height-120 && note.y<canvas.height-40 && e.code===columnCodes[note.col]){
 note.hit=true;
 combo++;hitNotes++;
-if(combo>maxCombo)maxCombo=maxCombo;
+if(combo>maxCombo)maxCombo=combo;
 flashAlpha=0.5;
 let img=new Image();img.src="PERFECT.png";ctx.drawImage(img,note.x,note.y,100,50);
 }
@@ -189,7 +159,7 @@ let img=new Image();img.src="PERFECT.png";ctx.drawImage(img,note.x,note.y,100,50
 });
 document.addEventListener("keyup",e=>{keysPressed[e.code]=false;});
 
-// GAME LOOP
+// game loop
 function gameLoop(timestamp){
 if(!gameRunning)return;
 let delta=(timestamp-lastTime)/1000;
@@ -199,41 +169,34 @@ generateNotes(bgm.currentTime);
 
 ctx.clearRect(0,0,canvas.width,canvas.height);
 
-// CAMERA SHAKE
-if(screenShake>0){ctx.save();ctx.translate((Math.random()-0.5)*screenShake,(Math.random()-0.5)*screenShake);screenShake*=0.9;}else ctx.save();
-
-// DRAW NOTES
+// draw notes
 for(let note of notes){
 if(note.hit)continue;
 note.y+=currentSong.speed*delta;
 ctx.fillStyle="red";
 ctx.fillRect(note.x,note.y,columnWidth-40,50);
-
-// MISS
 if(note.y>canvas.height-70){
 note.hit=true;
-combo=0;screenShake=15;
+combo=0;
 let img=new Image();img.src="MISS.png";ctx.drawImage(img,note.x,canvas.height-70,100,50);
 }
 }
 
-ctx.restore();
-
-// FLASH
+// flash effetto hit
 if(flashAlpha>0){
 ctx.fillStyle="rgba(255,255,255,"+flashAlpha+")";
 ctx.fillRect(0,0,canvas.width,canvas.height);
 flashAlpha-=0.03;
 }
 
-// VIDEO ZOOM
-bgVideo.style.transform="translate(-50%,-50%) scale("+(1+combo/300)+")";
+// video zoom
+if(currentSong.bgType==="video") bgVideo.style.transform="translate(-50%,-50%) scale("+(1+combo/300)+")";
 
 if(bgm.ended){endGame();return;}
 requestAnimationFrame(gameLoop);
 }
 
-// END GAME RESULTS
+// fine gioco
 function endGame(){
 gameRunning=false;
 document.getElementById("results").style.display="flex";
