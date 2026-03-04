@@ -7,129 +7,54 @@
 <style>
 body{margin:0;overflow:hidden;background:black;font-family:Arial;color:white}
 
-/* BACKGROUND VIDEO/IMAGE */
-#bgVideo,#bgImg{
-position:absolute;
-top:50%;
-left:50%;
-width:100%;
-height:100%;
-transform:translate(-50%,-50%);
-object-fit:cover;
-z-index:0;
-opacity:0;
-transition:opacity 1s, transform 0.2s ease;
+/* Sfondo video/immagine */
+#bgVideo, #bgImg{
+position:absolute;top:50%;left:50%;width:100%;height:100%;
+transform:translate(-50%,-50%);object-fit:cover;z-index:0;opacity:0;transition:opacity 1s;
 }
 
-/* CANVAS */
+/* Canvas */
 #gameCanvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:2}
 
-/* MENU */
+/* Menu */
 #menu{
-position:absolute;
-width:100%;
-height:100%;
-display:flex;
-flex-direction:column;
-justify-content:center;
-align-items:center;
-z-index:5;
-background:rgba(0,0,0,0.7);
-animation:fadeIn 1s ease;
+position:absolute;width:100%;height:100%;display:flex;flex-direction:column;
+justify-content:center;align-items:center;z-index:5;background:rgba(0,0,0,0.7);
+transition:opacity 0.5s ease;
 }
+#logo{width:300px;margin-bottom:20px;animation:logoPulse 2s infinite alternate;}
+@keyframes logoPulse{from{transform:scale(1)}to{transform:scale(1.05)}}
+select,button{padding:12px 25px;margin:10px;font-size:18px;background:rgba(255,255,255,0.1);border:2px solid white;color:white;cursor:pointer;transition:all 0.2s;}
+button:hover,select:hover{background:white;color:black;box-shadow:0 0 15px white;}
 
-@keyframes fadeIn{
-from{opacity:0;transform:translateY(20px)}
-to{opacity:1;transform:translateY(0)}
-}
-
-#logo{
-width:300px;
-margin-bottom:30px;
-animation:logoPulse 2s infinite alternate;
-}
-
-@keyframes logoPulse{
-from{transform:scale(1)}
-to{transform:scale(1.05)}
-}
-
-.menuTitle{font-size:60px;margin-bottom:20px;letter-spacing:5px;}
-
-button,select{
-padding:12px 25px;
-margin:10px;
-font-size:18px;
-background:rgba(255,255,255,0.1);
-border:2px solid white;
-color:white;
-cursor:pointer;
-transition:all 0.2s ease;
-}
-
-button:hover{
-background:white;
-color:black;
-box-shadow:0 0 15px white;
+/* Hit line */
+#hitLine{
+position:absolute;bottom:70px;left:0;width:100%;height:3px;background:rgba(255,255,255,0.5);z-index:3;
 }
 
 /* SHOW START */
 #showStart{
-position:absolute;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-width:300px;
-display:none;
-z-index:10;
+position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+width:300px;display:none;z-index:10;
 }
 
 /* RESULTS */
-#results{
-position:absolute;
-width:100%;
-height:100%;
-display:none;
-flex-direction:column;
-justify-content:center;
-align-items:center;
-z-index:6;
-background:rgba(0,0,0,0.85);
-animation:fadeIn 0.8s ease;
-}
-
+#results{position:absolute;width:100%;height:100%;display:none;flex-direction:column;
+justify-content:center;align-items:center;z-index:6;background:rgba(0,0,0,0.85);}
 .rank{font-size:120px;animation:pop 0.6s ease;}
-
 @keyframes pop{0%{transform:scale(0)}100%{transform:scale(1)}}
 
-/* NOTE COLUMNS */
-.columnBar{
-position:absolute;
-top:0;
-width:2px;
-background:rgba(255,255,255,0.3);
-height:100%;
-z-index:3;
-}
-
-.columnKey{
-position:absolute;
-bottom:30px;
-width:100px;
-text-align:center;
-transform:translateX(-50%);
-font-size:20px;
-color:rgba(255,255,255,0.8);
-pointer-events:none;
-}
+/* Barre colonne */
+.columnBar{position:absolute;top:0;width:2px;height:100%;background:rgba(255,255,255,0.3);z-index:2;}
+.columnKey{position:absolute;bottom:30px;width:100px;text-align:center;transform:translateX(-50%);font-size:20px;color:rgba(255,255,255,0.8);pointer-events:none;}
 </style>
 </head>
 <body>
 
 <video id="bgVideo" autoplay muted loop playsinline></video>
 <img id="bgImg">
-
 <canvas id="gameCanvas"></canvas>
+<div id="hitLine"></div>
 
 <div id="menu">
 <img id="logo" src="Risorsa_1sinny.png">
@@ -141,7 +66,6 @@ pointer-events:none;
 </div>
 
 <img id="showStart" src="SHOW_START.png">
-
 <div id="results">
 <div class="rank" id="finalRank">S</div>
 <div id="accText"></div>
@@ -155,17 +79,18 @@ pointer-events:none;
 <script>
 const canvas=document.getElementById("gameCanvas");
 const ctx=canvas.getContext("2d");
-canvas.width=window.innerWidth;
-canvas.height=window.innerHeight;
-
 const bgVideo=document.getElementById("bgVideo");
 const bgImg=document.getElementById("bgImg");
 const bgm=document.getElementById("bgm");
 const showStart=document.getElementById("showStart");
+const hitLine=document.getElementById("hitLine");
+
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
 
 let gameRunning=false;
 let notes=[];
-let lastTime=0,lastBeat=0,BPM=140,beatInterval=0.428;
+let lastTime=0,lastBeat=0,BPM=140,beatInterval=60/140;
 let combo=0,maxCombo=0,totalNotes=0,hitNotes=0,screenShake=0,flashAlpha=0;
 
 const columns=4;
@@ -173,7 +98,6 @@ const columnWidth=canvas.width/columns;
 const columnKeys=["D","F","J","K"];
 const columnCodes=["KeyD","KeyF","KeyJ","KeyK"];
 
-// SONGS
 const songs={
 "BIRDBRAIN":{mp3:"BIRDBRAIN.mp3",BPM:140,speed:400,bgType:"video",bg:"https://drive.google.com/uc?export=download&id=1zC7cSlgmN12A7y2fuAfy2rhKXikPhDJT"},
 "Mesmerizer":{mp3:"mesmerizer.mp3",BPM:120,speed:500,bgType:"image",bg:"bg_mesmerizer.png"}
@@ -204,7 +128,7 @@ lastBeat=0;
 combo=0;maxCombo=0;totalNotes=0;hitNotes=0;
 gameRunning=true;
 
-// set BG
+// set background
 if(currentSong.bgType==="video"){
 bgImg.style.opacity=0;
 bgVideo.src=currentSong.bg;
@@ -257,10 +181,9 @@ if(note.hit)continue;
 if(note.y>canvas.height-120 && note.y<canvas.height-40 && e.code===columnCodes[note.col]){
 note.hit=true;
 combo++;hitNotes++;
-if(combo>maxCombo)maxCombo=combo;
+if(combo>maxCombo)maxCombo=maxCombo;
 flashAlpha=0.5;
-let img=new Image();img.src="PERFECT.png";
-ctx.drawImage(img,note.x,note.y,100,50);
+let img=new Image();img.src="PERFECT.png";ctx.drawImage(img,note.x,note.y,100,50);
 }
 }
 });
