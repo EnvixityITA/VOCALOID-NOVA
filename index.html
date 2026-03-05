@@ -4,273 +4,466 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VOCALOID NOVA BETA</title>
+
 <style>
-body {margin:0;overflow:hidden;font-family:Arial;background:black;color:white;}
-#gameCanvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;}
-#introScreen {position:fixed; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:100; background: rgba(0,0,0,0.8);}
-#logo {width:400px; opacity:0; animation:logoFadeIn 2s forwards, logoFloat 3s ease-in-out infinite alternate; filter: drop-shadow(0 0 15px white);}
-@keyframes logoFadeIn {to {opacity:1;}}
-@keyframes logoFloat {0% {transform: translateY(0);} 100% {transform: translateY(-20px);}}
-#menuContent {margin-top:20px;text-align:center;background: rgba(0,0,0,0.5);padding:20px 40px;border-radius:10px;}
-#songSelector, #settingsBtn, #startBtnIntro {margin:5px;padding:10px 20px;font-size:18px;cursor:pointer;background: rgba(255,255,255,0.1);color:white;border:2px solid white;border-radius:6px;backdrop-filter: blur(2px);}
-#songTitle {font-size:24px; font-weight:bold; color:white; margin-bottom:5px;}
-#difficultyBadge { display:inline-block; padding:5px 15px; border-radius:8px; cursor:pointer; margin-bottom:5px;}
-#timer { font-size:16px; margin-top:5px; color:white;}
-#showStart {position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:200;display:none;width:300px;}
-#hitLine{position:absolute;bottom:70px;left:0;width:100%;height:3px;background:rgba(255,255,255,0.5);z-index:5;opacity:1;}
-#score,#combo,#rank{position:absolute;top:10px;font-size:24px;z-index:10;}
-#score{left:10px;} #combo{left:200px;} #rank{left:400px;}
-#accuracyBar{position:absolute;bottom:50px;left:50%;transform:translateX(-50%);width:300px;height:8px;background:rgba(255,255,255,0.2);border-radius:4px;overflow:hidden;z-index:5;}
-#accuracyFill{width:0%;height:100%;background:lime;transition:width 0.1s;}
-.columnLabel{position:absolute;bottom:30px;font-size:20px;color:rgba(255,255,255,0.7);width:100px;text-align:center;transform:translateX(-50%);pointer-events:none;}
-#keySettings{position:absolute;top:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);padding:10px 15px;border-radius:8px;display:none;z-index:20;}
-#keySettings td{border:1px solid rgba(255,255,255,0.3);padding:8px 15px;text-align:center;cursor:pointer;color:white;font-weight:bold;}
-#keySettings td:hover{background:rgba(255,255,255,0.2);}
-#bgImg {position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:0;transition:opacity 1s;}
+
+body{
+margin:0;
+overflow:hidden;
+font-family:Arial;
+background:black;
+color:white;
+}
+
+#gameCanvas{
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+z-index:1;
+}
+
+#bgImg{
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+object-fit:cover;
+z-index:0;
+opacity:0;
+transition:opacity 1s, transform 0.1s;
+}
+
+#introScreen{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+z-index:100;
+background:rgba(0,0,0,0.85);
+}
+
+#logo{
+width:400px;
+opacity:0;
+animation:logoFadeIn 2s forwards, logoFloat 3s infinite alternate;
+filter:drop-shadow(0 0 20px white);
+}
+
+@keyframes logoFadeIn{to{opacity:1}}
+@keyframes logoFloat{0%{transform:translateY(0)}100%{transform:translateY(-20px)}}
+
+#menuContent{
+margin-top:20px;
+text-align:center;
+background:rgba(0,0,0,0.5);
+padding:20px 40px;
+border-radius:10px;
+}
+
+button,select{
+margin:5px;
+padding:10px 20px;
+font-size:18px;
+cursor:pointer;
+background:rgba(255,255,255,0.1);
+color:white;
+border:2px solid white;
+border-radius:6px;
+}
+
+#songProgress{
+position:absolute;
+top:50px;
+left:50%;
+transform:translateX(-50%);
+width:400px;
+height:6px;
+background:rgba(255,255,255,0.2);
+border-radius:4px;
+overflow:hidden;
+z-index:10;
+}
+
+#songProgressFill{
+height:100%;
+width:0%;
+background:white;
+}
+
+#score,#combo,#rank{
+position:absolute;
+top:10px;
+font-size:24px;
+z-index:10;
+}
+
+#score{left:10px}
+#combo{left:200px}
+#rank{left:380px}
+
+.columnLabel{
+position:absolute;
+bottom:30px;
+font-size:20px;
+color:rgba(255,255,255,0.7);
+width:100px;
+text-align:center;
+transform:translateX(-50%);
+}
+
+#hitLine{
+position:absolute;
+bottom:70px;
+left:0;
+width:100%;
+height:3px;
+background:rgba(255,255,255,0.5);
+z-index:5;
+}
+
 </style>
 </head>
+
 <body>
 
-<div id="introScreen">
-    <img id="logo" src="Risorsa_1sinny.png" alt="Logo">
-    <div id="menuContent">
-        <div id="songTitle">BIRDBRAIN</div>
-        <div id="difficultyBadge">MEDIO</div>
-        <div id="timer">00:00 / 00:00</div>
-        <select id="songSelector">
-          <option value="BIRDBRAIN">BIRDBRAIN</option>
-          <option value="Mesmerizer">Mesmerizer</option>
-        </select>
-        <br>
-        <button id="startBtnIntro">Start</button>
-        <button id="settingsBtn">Impostazioni</button>
-        <div id="keySettings">
-            <table><tr>
-              <td id="col0">D</td><td id="col1">F</td>
-              <td id="col2">J</td><td id="col3">K</td>
-            </tr></table>
-            <small>Clicca su un tasto per cambiarlo</small>
-        </div>
-    </div>
-</div>
-
-<img id="showStart" src="SHOW_START.png">
 <img id="bgImg">
+
+<div id="introScreen">
+
+<img id="logo" src="Risorsa_1sinny.png">
+
+<div id="menuContent">
+
+<h2 id="songTitle">BIRDBRAIN</h2>
+
+<select id="songSelector">
+<option value="BIRDBRAIN">BIRDBRAIN</option>
+<option value="Mesmerizer">Mesmerizer</option>
+</select>
+
+<br>
+
+<button id="startBtn">Start</button>
+
+</div>
+</div>
 
 <canvas id="gameCanvas"></canvas>
 
 <div id="hitLine"></div>
+
 <div id="score">Punti: 0</div>
 <div id="combo">Combo: 0x</div>
 <div id="rank">Rank: F</div>
-<div id="accuracyBar"><div id="accuracyFill"></div></div>
 
-<audio id="bgm" crossorigin="anonymous"></audio>
-<audio id="startSfx" src="startSound.mp3" crossorigin="anonymous"></audio>
+<div id="songProgress">
+<div id="songProgressFill"></div>
+</div>
+
+<audio id="bgm"></audio>
 
 <script>
-window.onload=function(){
-const canvas=document.getElementById("gameCanvas");
-const ctx=canvas.getContext("2d");
-canvas.width=window.innerWidth; canvas.height=window.innerHeight;
 
-const bgm=document.getElementById("bgm");
-const startSfx=document.getElementById("startSfx");
-const showStart=document.getElementById("showStart");
-const bgImg=document.getElementById("bgImg");
+const canvas=document.getElementById("gameCanvas")
+const ctx=canvas.getContext("2d")
 
-const songSelector=document.getElementById("songSelector");
-const difficultyBadge=document.getElementById("difficultyBadge");
-const songTitle=document.getElementById("songTitle");
-const timerElem=document.getElementById("timer");
-const introScreen=document.getElementById("introScreen");
-const settingsBtn=document.getElementById("settingsBtn");
-const keySettings=document.getElementById("keySettings");
+canvas.width=window.innerWidth
+canvas.height=window.innerHeight
 
-const hitLine=document.getElementById("hitLine");
-const scoreDisplay=document.getElementById("score");
-const comboDisplay=document.getElementById("combo");
-const rankDisplay=document.getElementById("rank");
+const bgm=document.getElementById("bgm")
+const bgImg=document.getElementById("bgImg")
 
-const columns=4;
-let columnKeys=["D","F","J","K"];
-let columnCodes=["KeyD","KeyF","KeyJ","KeyK"];
-const columnWidth=canvas.width/columns;
-let noteSpeed=400;
+const scoreDisplay=document.getElementById("score")
+const comboDisplay=document.getElementById("combo")
+const rankDisplay=document.getElementById("rank")
 
-let notes=[], particles=[], hitRatings=[], gameRunning=false;
-let score=0, combo=0, totalHits=0, totalPerfect=0;
+const columns=4
+const columnWidth=canvas.width/columns
+
+let columnKeys=["D","F","J","K"]
+let columnCodes=["KeyD","KeyF","KeyJ","KeyK"]
+
+let notes=[]
+let particles=[]
+let score=0
+let combo=0
+let totalHits=0
+let totalPerfect=0
+
+let gameRunning=false
+
+let noteSpeed=400
+
+const columnColors=["#00e5ff","#00ff90","#ff3df2","#ffd500"]
 
 const songs={
-"BIRDBRAIN":{mp3:"BIRDBRAIN.mp3", BPM:140, difficulty:"MEDIO", color:"yellow", speed:400, bg:"bg_birdbrain.png"},
-"Mesmerizer":{mp3:"mesmerizer.mp3", BPM:120, difficulty:"DIFFICILE", color:"red", speed:500, bg:"bg_mesmerizer.png"}
-};
-let currentSong=songs[songSelector.value];
 
-function updateMenuInfo(){
-    difficultyBadge.innerText=currentSong.difficulty;
-    difficultyBadge.style.background=currentSong.color;
-    songTitle.innerText=songSelector.value;
+"BIRDBRAIN":{
+mp3:"BIRDBRAIN.mp3",
+BPM:140,
+speed:400,
+bg:"immagine_2026-03-03_204259655.png"
+},
+
+"Mesmerizer":{
+mp3:"mesmerizer.mp3",
+BPM:120,
+speed:500,
+bg:"immagine_2026-03-03_221829535.png"
 }
-updateMenuInfo();
 
-songSelector.addEventListener("change",()=>{
-    currentSong=songs[songSelector.value];
-    updateMenuInfo();
-    noteSpeed=currentSong.speed;
-});
+}
 
-document.getElementById("startBtnIntro").addEventListener("click",()=>{
-    // Dissolvenza intro prima di SHOW_START
-    introScreen.style.transition="opacity 0.5s";
-    introScreen.style.opacity=0;
-    setTimeout(()=>{
-        introScreen.style.display="none";
-        startSfx.currentTime=0; startSfx.play();
-        showStart.style.display="block";
-        bgImg.src=currentSong.bg;
-        bgImg.style.opacity=1;
-        setTimeout(()=>{
-            showStart.style.display="none";
-            startGame();
-        },1000);
-    },500);
-});
+let currentSong=songs["BIRDBRAIN"]
+
+const songSelector=document.getElementById("songSelector")
+songSelector.onchange=()=>{
+currentSong=songs[songSelector.value]
+document.getElementById("songTitle").innerText=songSelector.value
+}
+
+document.getElementById("startBtn").onclick=()=>{
+
+document.getElementById("introScreen").style.display="none"
+
+bgImg.src=currentSong.bg
+bgImg.style.opacity=1
+
+startGame()
+
+}
 
 function startGame(){
-    notes=[]; particles=[]; hitRatings=[];
-    score=0; combo=0; totalHits=0; totalPerfect=0;
-    noteSpeed=currentSong.speed;
 
-    bgm.src=currentSong.mp3;
-    bgm.currentTime=0;
-    bgm.play();
+notes=[]
+particles=[]
+score=0
+combo=0
+totalHits=0
+totalPerfect=0
 
-    gameRunning=true;
-    lastTime=0;
-    lastBeat=0;
-    BPM=currentSong.BPM;
-    beatInterval=60/BPM;
-    requestAnimationFrame(gameLoop);
+noteSpeed=currentSong.speed
+
+bgm.src=currentSong.mp3
+bgm.currentTime=0
+bgm.play()
+
+gameRunning=true
+
+lastBeat=0
+BPM=currentSong.BPM
+beatInterval=60/BPM
+
+requestAnimationFrame(gameLoop)
+
 }
 
-settingsBtn.addEventListener("click",()=>{keySettings.style.display = keySettings.style.display==="none"?"block":"none";});
-for(let i=0;i<columns;i++){
-  document.getElementById("col"+i).addEventListener("click",()=>{
-    const newKey=prompt("Inserisci nuovo tasto per colonna "+(i+1), columnKeys[i]);
-    if(newKey){ columnKeys[i]=newKey.toUpperCase(); columnCodes[i]="Key"+newKey.toUpperCase(); document.getElementById("col"+i).innerText=columnKeys[i]; }
-  });
-}
-
-let lastTime=0, lastBeat=0, BPM=currentSong.BPM, beatInterval=60/BPM;
+let lastTime=0
+let lastBeat=0
+let BPM=120
+let beatInterval=0.5
+let beatPulse=0
 
 function generateNotes(time){
-    while(time-lastBeat>=beatInterval){
-        const col=Math.floor(Math.random()*columns);
-        notes.push({y:-50,column:col,hit:false});
-        lastBeat+=beatInterval*(0.7+Math.random()*0.6);
-    }
+
+while(time-lastBeat>=beatInterval){
+
+if(Math.random()>0.35){
+
+const col=Math.floor(Math.random()*columns)
+
+notes.push({
+y:-50,
+column:col,
+hit:false
+})
+
+}
+
+lastBeat+=beatInterval
+beatPulse=1
+
+}
+
+}
+
+function spawnParticles(x,y,color){
+
+for(let i=0;i<15;i++){
+
+particles.push({
+
+x:x,
+y:y,
+vx:(Math.random()-0.5)*6,
+vy:(Math.random()-0.5)*6,
+life:1,
+color:color
+
+})
+
+}
+
 }
 
 document.addEventListener("keydown",e=>{
-    if(!gameRunning) return;
-    for(let note of notes){
-        if(note.hit) continue;
-        if(e.code===columnCodes[note.column] && note.y>=canvas.height-120 && note.y<=canvas.height-40){
-            note.hit=true; totalHits++;
-            const dist=Math.abs(note.y-(canvas.height-70));
-            let scoreMultiplier=Math.max(0,1-dist/60);
-            score+=Math.round(100*scoreMultiplier);
-            if(dist<5) totalPerfect++;
-            let rating="MEH";
-            if(dist<5) rating="PERFECT";
-            else if(dist<10) rating="SICK";
-            else if(dist<20) rating="AWESOME";
-            else if(dist<35) rating="NICE";
-            hitRatings.push({img:new Image(),x:note.column*columnWidth+columnWidth/2,y:note.y,rating:rating,alpha:1});
-            hitRatings[hitRatings.length-1].img.src=rating+".png";
-        }
-    }
-});
+
+if(!gameRunning)return
+
+for(let note of notes){
+
+if(note.hit)continue
+
+if(e.code===columnCodes[note.column] &&
+note.y>=canvas.height-120 &&
+note.y<=canvas.height-40){
+
+note.hit=true
+
+totalHits++
+combo++
+
+const dist=Math.abs(note.y-(canvas.height-70))
+
+if(dist<5)totalPerfect++
+
+score+=100*(1+combo*0.05)
+
+spawnParticles(
+note.column*columnWidth+columnWidth/2,
+canvas.height-70,
+columnColors[note.column]
+)
+
+updateRank()
+
+}
+
+}
+
+})
+
+function updateRank(){
+
+if(totalHits===0)return
+
+const acc=totalPerfect/totalHits
+
+let rank="F"
+
+if(acc>0.95)rank="S"
+else if(acc>0.85)rank="A"
+else if(acc>0.7)rank="B"
+else if(acc>0.55)rank="C"
+else if(acc>0.4)rank="D"
+
+rankDisplay.innerText="Rank: "+rank
+
+}
 
 function drawColumns(){
-    for(let i=1;i<columns;i++){
-        ctx.strokeStyle="rgba(200,200,200,0.3)";
-        ctx.lineWidth=2;
-        ctx.beginPath();
-        ctx.moveTo(i*columnWidth,0);
-        ctx.lineTo(i*columnWidth,canvas.height);
-        ctx.stroke();
-    }
-    for(let i=0;i<columns;i++){
-        let label=document.getElementById("label"+i);
-        if(!label){
-            label=document.createElement("div");
-            label.id="label"+i;
-            label.className="columnLabel";
-            label.innerText=columnKeys[i];
-            document.body.appendChild(label);
-        }
-        label.style.left=(i*columnWidth + columnWidth/2) + "px";
-    }
+
+for(let i=1;i<columns;i++){
+
+ctx.strokeStyle="rgba(200,200,200,0.3)"
+ctx.lineWidth=2
+ctx.beginPath()
+ctx.moveTo(i*columnWidth,0)
+ctx.lineTo(i*columnWidth,canvas.height)
+ctx.stroke()
+
+}
+
 }
 
 function gameLoop(timestamp){
-    if(!gameRunning) return;
-    const deltaTime=(timestamp-lastTime)/1000;
-    lastTime=timestamp;
 
-    generateNotes(bgm.currentTime);
+if(!gameRunning)return
 
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+const deltaTime=(timestamp-lastTime)/1000
+lastTime=timestamp
 
-    drawColumns();
+generateNotes(bgm.currentTime)
 
-    // muove note
-    for(let note of notes){
-        if(note.hit) continue;
-        note.y += noteSpeed*deltaTime;
-        ctx.fillStyle="red";
-        ctx.fillRect(note.column*columnWidth+10,note.y,columnWidth-20,50);
-        // Se supera hit line
-        if(note.y>canvas.height-70){ 
-            note.hit=true; combo=0;
-            hitRatings.push({img:new Image(),x:note.column*columnWidth+columnWidth/2,y:canvas.height-70,rating:"MISS",alpha:1});
-            hitRatings[hitRatings.length-1].img.src="MISS.png";
-        }
-    }
+ctx.clearRect(0,0,canvas.width,canvas.height)
 
-    // ratings PNG
-    for(let i=hitRatings.length-1;i>=0;i--){
-        const r=hitRatings[i];
-        ctx.save();
-        ctx.globalAlpha=r.alpha;
-        const scale=1+0.3*Math.sin((1-r.alpha)*Math.PI*2);
-        ctx.translate(r.x,r.y);
-        ctx.scale(scale,scale);
-        ctx.shadowColor="white"; ctx.shadowBlur=20*r.alpha;
-        ctx.drawImage(r.img,-50,-25,100,50);
-        ctx.restore();
-        r.y-=1.2; r.alpha-=0.02;
-        if(r.alpha<=0) hitRatings.splice(i,1);
-    }
+drawColumns()
 
-    // timer
-    const current=bgm.currentTime||0;
-    const total=bgm.duration||0;
-    function formatTime(t){ const m=Math.floor(t/60).toString().padStart(2,'0'); const s=Math.floor(t%60).toString().padStart(2,'0'); return m+":"+s;}
-    ctx.save();
-    ctx.font="20px Arial";
-    ctx.fillStyle="rgba(0,0,0,0.5)";
-    ctx.fillRect(canvas.width-160,10,150,30);
-    ctx.fillStyle="white";
-    ctx.shadowColor="black"; ctx.shadowBlur=4;
-    ctx.fillText(formatTime(current)+" / "+formatTime(total),canvas.width-150,32);
-    ctx.restore();
+for(let note of notes){
 
-    requestAnimationFrame(gameLoop);
+if(note.hit)continue
+
+note.y+=noteSpeed*deltaTime
+
+ctx.fillStyle=columnColors[note.column]
+
+ctx.fillRect(
+note.column*columnWidth+10,
+note.y,
+columnWidth-20,
+50
+)
+
+if(note.y>canvas.height-70){
+
+note.hit=true
+combo=0
+
 }
-};
+
+}
+
+for(let i=particles.length-1;i>=0;i--){
+
+const p=particles[i]
+
+ctx.globalAlpha=p.life
+ctx.fillStyle=p.color
+
+ctx.beginPath()
+ctx.arc(p.x,p.y,4,0,Math.PI*2)
+ctx.fill()
+
+p.x+=p.vx
+p.y+=p.vy
+p.life-=0.03
+
+if(p.life<=0)particles.splice(i,1)
+
+}
+
+ctx.globalAlpha=1
+
+if(beatPulse>0){
+
+bgImg.style.transform="scale("+(1+beatPulse*0.03)+")"
+beatPulse-=0.05
+
+}else{
+
+bgImg.style.transform="scale(1)"
+
+}
+
+scoreDisplay.innerText="Punti: "+score
+comboDisplay.innerText="Combo: "+combo+"x"
+
+const progress=(bgm.currentTime/bgm.duration)*100
+document.getElementById("songProgressFill").style.width=progress+"%"
+
+requestAnimationFrame(gameLoop)
+
+}
+
 </script>
+
 </body>
 </html>
