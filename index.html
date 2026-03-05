@@ -80,7 +80,7 @@ const logo=document.getElementById("logo");
 const startBtn=document.getElementById("startBtn");
 const keySettings=document.getElementById("keySettings");
 
-const hitLineHeight=25; // rettangolo più grande
+const hitLineHeight=25;
 
 const songs={
 "BIRDBRAIN":{mp3:"BIRDBRAIN.mp3",BPM:140,difficulty:"MEDIO",color:"yellow",speed:400,bg:"immagine_2026-03-03_204259655.png"},
@@ -93,7 +93,7 @@ let notes=[],chart=[],noteIndex=0,hitRatings=[];
 let score=0,combo=0,totalHits=0,totalPerfect=0,noteSpeed=400,gameRunning=false,lastTime=0;
 
 function updateColumns(){
-columns = (selector.value==="ECHO")?5:4;
+columns = (selector.value==="ECHO")?5:((selector.value==="Mesmerizer")?4:4);
 arrowZoneWidth = canvas.width*0.6;
 columnWidth = arrowZoneWidth/columns;
 arrowZoneOffset = (canvas.width-arrowZoneWidth)/2;
@@ -128,15 +128,24 @@ updateSongUI();
 
 updateSongUI();
 
-// Genera chart senza note iniziali a t=0
+// Genera chart con più note per ECHO
 function generateFullChart(){
 chart=[];
 const BPM=currentSong.BPM;
 const beat=60/currentSong.BPM;
 const duration=bgm.duration||120;
 for(let t=beat;t<duration;t+=beat){
-let col=Math.floor(columns*Math.random());
+let col;
+if(selector.value==="ECHO"){
+col=Math.floor(Math.random()*5); // tutte 5 le colonne
+} else {
+col=Math.floor(columns*Math.random());
+}
 chart.push({time:t,column:col});
+if(selector.value==="ECHO" && Math.random()<0.25){ // aggiungi qualche nota extra casuale
+let extraCol=Math.floor(Math.random()*5);
+chart.push({time:t+beat*0.3,column:extraCol});
+}
 }
 }
 
