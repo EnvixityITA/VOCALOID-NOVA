@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VOCALOID lol</title>
+<title>VOCALOID NOVA</title>
 <style>
 body{margin:0;overflow:hidden;background:black;font-family:Arial;color:white;}
 #bgImg{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:0;transition:opacity 1s;filter:blur(6px) brightness(0.45);}
@@ -290,6 +290,7 @@ document.addEventListener("keydown",e=>{
     }
 });
 
+// Zone MISS più permissiva
 function gameLoop(timestamp){
     if(!gameRunning)return;
     const delta=(timestamp-lastTime)/1000;
@@ -306,16 +307,20 @@ function gameLoop(timestamp){
     drawColumns();
     drawKeyLabels();
 
+    const missThreshold = canvas.height - 20; // più basso → più tempo prima di MISS
+
     for(let note of notes){
         if(note.hit)continue;
         ctx.fillStyle=columnColors[note.column];
         note.y+=noteSpeed*delta;
         ctx.fillRect(arrowZoneOffset+note.column*columnWidth+10,note.y,columnWidth-20,50);
-        if(note.y>canvas.height-70){
-            note.hit=true; combo=0; totalHits++;
+        if(note.y > missThreshold){
+            note.hit = true;
+            combo = 0;
+            totalHits++;
             const img=new Image();
-            img.src="MISS.png";
-            hitRatings.push({img:img,x:arrowZoneOffset+note.column*columnWidth+columnWidth/2,y:canvas.height-70,alpha:1});
+            img.src = "MISS.png";
+            hitRatings.push({img:img,x:arrowZoneOffset+note.column*columnWidth+columnWidth/2,y:missThreshold,alpha:1});
         }
     }
 
