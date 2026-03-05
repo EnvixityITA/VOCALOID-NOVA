@@ -83,7 +83,7 @@ let columns = 4;
 let columnWidth = arrowZoneWidth/columns;
 let arrowZoneOffset = (canvas.width-arrowZoneWidth)/2;
 
-let columnKeys=["D","F","H","J","K"];
+let columnKeys=[]; // verrà impostato dinamicamente
 const columnColors=[];
 
 const bgm=document.getElementById("bgm");
@@ -127,6 +127,14 @@ function updateColumns(){
     arrowZoneOffset = (canvas.width-arrowZoneWidth)/2;
 }
 
+function updateColumnKeys(){
+    if(currentSong===songs["ECHO"]){
+        columnKeys = ["D","F","H","J","K"];
+    }else{
+        columnKeys = ["D","F","J","K"];
+    }
+}
+
 function updateNoteColors(){
     if(currentSong===songs["BIRDBRAIN"]){columnColors.splice(0,4,...["#ff0000","#ff8000","#ff40bf","#ffff00"]);}
     else if(currentSong===songs["Mesmerizer"]){columnColors.splice(0,4,...["#00ffff","#00bfff","#0080ff","#0040ff"]);}
@@ -138,6 +146,7 @@ function updateSongUI(){
     document.getElementById("difficulty").innerText=currentSong.difficulty.toUpperCase();
     document.getElementById("difficulty").style.color=currentSong.color;
     updateColumns();
+    updateColumnKeys();
 }
 
 settingsBtn.onclick=()=>{settingsPanel.style.display = settingsPanel.style.display==="none"?"block":"none";}
@@ -145,8 +154,16 @@ tabKeysBtn.onclick=()=>{tabKeys.style.display="block"; tabSongs.style.display="n
 tabSongsBtn.onclick=()=>{tabKeys.style.display="none"; tabSongs.style.display="block";}
 document.getElementById("volumeSlider").oninput=function(){bgm.volume=this.value;};
 
-selector.onchange=function(){currentSong=songs[selector.value]; selector2.value=selector.value; updateSongUI();}
-selector2.onchange=function(){currentSong=songs[selector2.value]; selector.value=selector2.value; updateSongUI();}
+selector.onchange=function(){
+    currentSong=songs[selector.value];
+    selector2.value=selector.value;
+    updateSongUI();
+}
+selector2.onchange=function(){
+    currentSong=songs[selector2.value];
+    selector.value=selector2.value;
+    updateSongUI();
+}
 
 function generateFullChart(){
     chart=[];
@@ -189,8 +206,8 @@ function startGame(){
 }
 
 for(let i=0;i<5;i++){
-    document.getElementById("col"+i).addEventListener("click",()=>{
-        let currentKey = columnKeys[i];
+    document.getElementById("col"+i)?.addEventListener("click",()=>{
+        let currentKey = columnKeys[i] || "";
         const newKey=prompt("Inserisci nuovo tasto per colonna "+(i+1), currentKey);
         if(newKey){ 
             columnKeys[i]=newKey.toUpperCase(); 
@@ -225,7 +242,7 @@ function drawKeyLabels(){
             label.className="columnLabel";
             document.body.appendChild(label);
         }
-        label.innerText=columnKeys[i];
+        label.innerText=columnKeys[i] || "";
         label.style.left=(arrowZoneOffset + i*columnWidth + columnWidth/2)+"px";
         label.style.bottom="30px";
     }
