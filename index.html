@@ -2,131 +2,80 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VOCALOID NOVA BETA</title>
+<title>VOCALOID NOVA</title>
 
 <style>
 
 body{
 margin:0;
 overflow:hidden;
-font-family:Arial;
 background:black;
+font-family:Arial;
 color:white;
-}
-
-#gameCanvas{
-position:absolute;
-top:0;
-left:0;
-width:100%;
-height:100%;
-z-index:1;
 }
 
 #bgImg{
 position:absolute;
-top:0;
-left:0;
 width:100%;
 height:100%;
 object-fit:cover;
 z-index:0;
 opacity:0;
-transition:opacity 1s, transform 0.1s;
+transition:opacity 1s, transform .1s;
+filter:blur(6px) brightness(0.45);
+}
+
+#gameCanvas{
+position:absolute;
+width:100%;
+height:100%;
+z-index:1;
 }
 
 #introScreen{
-position:fixed;
-top:0;
-left:0;
+position:absolute;
 width:100%;
 height:100%;
 display:flex;
 flex-direction:column;
 justify-content:center;
 align-items:center;
-z-index:100;
-background:rgba(0,0,0,0.85);
-}
-
-#logo{
-width:400px;
-opacity:0;
-animation:logoFadeIn 2s forwards, logoFloat 3s infinite alternate;
-filter:drop-shadow(0 0 20px white);
-}
-
-@keyframes logoFadeIn{to{opacity:1}}
-@keyframes logoFloat{0%{transform:translateY(0)}100%{transform:translateY(-20px)}}
-
-#menuContent{
-margin-top:20px;
-text-align:center;
-background:rgba(0,0,0,0.5);
-padding:20px 40px;
-border-radius:10px;
-}
-
-button,select{
-margin:5px;
-padding:10px 20px;
-font-size:18px;
-cursor:pointer;
-background:rgba(255,255,255,0.1);
-color:white;
-border:2px solid white;
-border-radius:6px;
-}
-
-#songProgress{
-position:absolute;
-top:50px;
-left:50%;
-transform:translateX(-50%);
-width:400px;
-height:6px;
-background:rgba(255,255,255,0.2);
-border-radius:4px;
-overflow:hidden;
+background:black;
 z-index:10;
 }
 
-#songProgressFill{
-height:100%;
-width:0%;
-background:white;
+#difficulty{
+color:#ffd500;
+margin-top:5px;
 }
 
 #score,#combo,#rank{
 position:absolute;
 top:10px;
-font-size:24px;
-z-index:10;
+font-size:22px;
+z-index:5;
 }
 
 #score{left:10px}
 #combo{left:200px}
-#rank{left:380px}
+#rank{left:360px}
 
 .columnLabel{
 position:absolute;
 bottom:30px;
-font-size:20px;
-color:rgba(255,255,255,0.7);
 width:100px;
 text-align:center;
+font-size:20px;
 transform:translateX(-50%);
+color:white;
 }
 
 #hitLine{
 position:absolute;
 bottom:70px;
-left:0;
 width:100%;
 height:3px;
-background:rgba(255,255,255,0.5);
-z-index:5;
+background:white;
 }
 
 </style>
@@ -138,22 +87,16 @@ z-index:5;
 
 <div id="introScreen">
 
-<img id="logo" src="Risorsa_1sinny.png">
-
-<div id="menuContent">
-
-<h2 id="songTitle">BIRDBRAIN</h2>
+<h1 id="songTitle">BIRDBRAIN</h1>
+<div id="difficulty"></div>
 
 <select id="songSelector">
 <option value="BIRDBRAIN">BIRDBRAIN</option>
 <option value="Mesmerizer">Mesmerizer</option>
 </select>
 
-<br>
-
 <button id="startBtn">Start</button>
 
-</div>
 </div>
 
 <canvas id="gameCanvas"></canvas>
@@ -163,10 +106,6 @@ z-index:5;
 <div id="score">Punti: 0</div>
 <div id="combo">Combo: 0x</div>
 <div id="rank">Rank: F</div>
-
-<div id="songProgress">
-<div id="songProgressFill"></div>
-</div>
 
 <audio id="bgm"></audio>
 
@@ -178,45 +117,32 @@ const ctx=canvas.getContext("2d")
 canvas.width=window.innerWidth
 canvas.height=window.innerHeight
 
-const bgm=document.getElementById("bgm")
-const bgImg=document.getElementById("bgImg")
-
-const scoreDisplay=document.getElementById("score")
-const comboDisplay=document.getElementById("combo")
-const rankDisplay=document.getElementById("rank")
-
 const columns=4
 const columnWidth=canvas.width/columns
 
-let columnKeys=["D","F","J","K"]
-let columnCodes=["KeyD","KeyF","KeyJ","KeyK"]
+const columnKeys=["D","F","J","K"]
+const columnCodes=["KeyD","KeyF","KeyJ","KeyK"]
 
-let notes=[]
-let particles=[]
-let score=0
-let combo=0
-let totalHits=0
-let totalPerfect=0
-
-let gameRunning=false
-
-let noteSpeed=400
-
-const columnColors=["#00e5ff","#00ff90","#ff3df2","#ffd500"]
+const columnColors=[
+"#00e5ff",
+"#00ff90",
+"#ff3df2",
+"#ffd500"
+]
 
 const songs={
 
 "BIRDBRAIN":{
 mp3:"BIRDBRAIN.mp3",
 BPM:140,
-speed:400,
+difficulty:"MEDIO",
 bg:"immagine_2026-03-03_204259655.png"
 },
 
 "Mesmerizer":{
 mp3:"mesmerizer.mp3",
 BPM:120,
-speed:500,
+difficulty:"DIFFICILE",
 bg:"immagine_2026-03-03_221829535.png"
 }
 
@@ -224,11 +150,42 @@ bg:"immagine_2026-03-03_221829535.png"
 
 let currentSong=songs["BIRDBRAIN"]
 
-const songSelector=document.getElementById("songSelector")
-songSelector.onchange=()=>{
-currentSong=songs[songSelector.value]
-document.getElementById("songTitle").innerText=songSelector.value
+const bgm=document.getElementById("bgm")
+const bgImg=document.getElementById("bgImg")
+
+const scoreDisplay=document.getElementById("score")
+const comboDisplay=document.getElementById("combo")
+const rankDisplay=document.getElementById("rank")
+
+let notes=[]
+let particles=[]
+let chart=[]
+let noteIndex=0
+
+let score=0
+let combo=0
+let totalHits=0
+let totalPerfect=0
+
+let noteSpeed=400
+let gameRunning=false
+
+const selector=document.getElementById("songSelector")
+
+function updateSongUI(){
+
+document.getElementById("songTitle").innerText=selector.value
+document.getElementById("difficulty").innerText=
+"Difficoltà: "+currentSong.difficulty
+
 }
+
+selector.onchange=()=>{
+currentSong=songs[selector.value]
+updateSongUI()
+}
+
+updateSongUI()
 
 document.getElementById("startBtn").onclick=()=>{
 
@@ -241,55 +198,50 @@ startGame()
 
 }
 
+function generateFullChart(){
+
+chart=[]
+
+const BPM=currentSong.BPM
+const beat=60/BPM
+const duration=bgm.duration
+
+for(let t=0;t<duration;t+=beat){
+
+chart.push({
+
+time:t,
+column:Math.floor(Math.random()*columns)
+
+})
+
+}
+
+}
+
 function startGame(){
 
 notes=[]
-particles=[]
+chart=[]
+noteIndex=0
+
 score=0
 combo=0
 totalHits=0
 totalPerfect=0
 
-noteSpeed=currentSong.speed
-
 bgm.src=currentSong.mp3
 bgm.currentTime=0
+
+bgm.onloadedmetadata=()=>{
+
+generateFullChart()
+
 bgm.play()
 
 gameRunning=true
 
-lastBeat=0
-BPM=currentSong.BPM
-beatInterval=60/BPM
-
 requestAnimationFrame(gameLoop)
-
-}
-
-let lastTime=0
-let lastBeat=0
-let BPM=120
-let beatInterval=0.5
-let beatPulse=0
-
-function generateNotes(time){
-
-while(time-lastBeat>=beatInterval){
-
-if(Math.random()>0.35){
-
-const col=Math.floor(Math.random()*columns)
-
-notes.push({
-y:-50,
-column:col,
-hit:false
-})
-
-}
-
-lastBeat+=beatInterval
-beatPulse=1
 
 }
 
@@ -297,7 +249,7 @@ beatPulse=1
 
 function spawnParticles(x,y,color){
 
-for(let i=0;i<15;i++){
+for(let i=0;i<12;i++){
 
 particles.push({
 
@@ -322,14 +274,14 @@ for(let note of notes){
 
 if(note.hit)continue
 
-if(e.code===columnCodes[note.column] &&
-note.y>=canvas.height-120 &&
-note.y<=canvas.height-40){
+if(e.code===columnCodes[note.column]
+&& note.y>canvas.height-120
+&& note.y<canvas.height-40){
 
 note.hit=true
 
-totalHits++
 combo++
+totalHits++
 
 const dist=Math.abs(note.y-(canvas.height-70))
 
@@ -353,7 +305,7 @@ updateRank()
 
 function updateRank(){
 
-if(totalHits===0)return
+if(totalHits==0)return
 
 const acc=totalPerfect/totalHits
 
@@ -369,12 +321,30 @@ rankDisplay.innerText="Rank: "+rank
 
 }
 
+function spawnNotes(time){
+
+while(
+noteIndex<chart.length &&
+chart[noteIndex].time-2<=time
+){
+
+notes.push({
+y:-50,
+column:chart[noteIndex].column,
+hit:false
+})
+
+noteIndex++
+
+}
+
+}
+
 function drawColumns(){
 
 for(let i=1;i<columns;i++){
 
-ctx.strokeStyle="rgba(200,200,200,0.3)"
-ctx.lineWidth=2
+ctx.strokeStyle="rgba(255,255,255,0.2)"
 ctx.beginPath()
 ctx.moveTo(i*columnWidth,0)
 ctx.lineTo(i*columnWidth,canvas.height)
@@ -384,24 +354,49 @@ ctx.stroke()
 
 }
 
+function drawKeyLabels(){
+
+for(let i=0;i<columns;i++){
+
+let label=document.getElementById("label"+i)
+
+if(!label){
+
+label=document.createElement("div")
+label.id="label"+i
+label.className="columnLabel"
+label.innerText=columnKeys[i]
+document.body.appendChild(label)
+
+}
+
+label.style.left=(i*columnWidth+columnWidth/2)+"px"
+
+}
+
+}
+
+let lastTime=0
+
 function gameLoop(timestamp){
 
 if(!gameRunning)return
 
-const deltaTime=(timestamp-lastTime)/1000
+const delta=(timestamp-lastTime)/1000
 lastTime=timestamp
 
-generateNotes(bgm.currentTime)
+spawnNotes(bgm.currentTime)
 
 ctx.clearRect(0,0,canvas.width,canvas.height)
 
 drawColumns()
+drawKeyLabels()
 
 for(let note of notes){
 
 if(note.hit)continue
 
-note.y+=noteSpeed*deltaTime
+note.y+=noteSpeed*delta
 
 ctx.fillStyle=columnColors[note.column]
 
@@ -442,22 +437,8 @@ if(p.life<=0)particles.splice(i,1)
 
 ctx.globalAlpha=1
 
-if(beatPulse>0){
-
-bgImg.style.transform="scale("+(1+beatPulse*0.03)+")"
-beatPulse-=0.05
-
-}else{
-
-bgImg.style.transform="scale(1)"
-
-}
-
 scoreDisplay.innerText="Punti: "+score
 comboDisplay.innerText="Combo: "+combo+"x"
-
-const progress=(bgm.currentTime/bgm.duration)*100
-document.getElementById("songProgressFill").style.width=progress+"%"
 
 requestAnimationFrame(gameLoop)
 
@@ -465,5 +446,7 @@ requestAnimationFrame(gameLoop)
 
 </script>
 
+</body>
+</html>
 </body>
 </html>
