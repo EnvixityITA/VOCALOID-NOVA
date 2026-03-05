@@ -6,9 +6,9 @@
 <title>VOCALOID NOVA</title>
 <style>
 body{margin:0;overflow:hidden;background:black;font-family:Arial;color:white;}
-#bgImg{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:0;transition:opacity 1s, transform 0.1s;filter:blur(6px) brightness(0.45);}
+#bgImg{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:0;transition:opacity 1s;filter:blur(6px) brightness(0.45);}
 #gameCanvas{position:absolute;width:100%;height:100%;z-index:1;}
-#introScreen{position:absolute;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;background:black;z-index:10;opacity:0;transform:scale(0.95);}
+#introScreen{position:absolute;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;background:black;z-index:10;opacity:1;transition:opacity 0.5s, transform 0.5s;}
 #logo{width:350px;margin-bottom:20px;filter:drop-shadow(0 0 20px white);}
 #songTitle{font-size:32px;margin-bottom:5px;}
 #difficulty{margin-bottom:20px;font-size:20px;}
@@ -65,12 +65,33 @@ let columns = 4;
 let columnWidth = arrowZoneWidth/columns;
 let arrowZoneOffset = (canvas.width-arrowZoneWidth)/2;
 
-// Colonne e tasti
-let columnKeys=["D","F","J","K"];
-let columnCodes=["KeyD","KeyF","KeyJ","KeyK"];
+let columnKeys=["D","F","J","K"," "];
+let columnCodes=["KeyD","KeyF","KeyJ","KeyK","Space"];
 let columnColors=[];
 
-// Aggiungi quinta colonna solo per ECHO
+const bgm=document.getElementById("bgm");
+const bgImg=document.getElementById("bgImg");
+const scoreDisplay=document.getElementById("score");
+const comboDisplay=document.getElementById("combo");
+const rankDisplay=document.getElementById("rank");
+const selector=document.getElementById("songSelector");
+const introScreen=document.getElementById("introScreen");
+const logo=document.getElementById("logo");
+const startBtn=document.getElementById("startBtn");
+const keySettings=document.getElementById("keySettings");
+
+const hitLineHeight=25; // rettangolo più grande
+
+const songs={
+"BIRDBRAIN":{mp3:"BIRDBRAIN.mp3",BPM:140,difficulty:"MEDIO",color:"yellow",speed:400,bg:"immagine_2026-03-03_204259655.png"},
+"Mesmerizer":{mp3:"mesmerizer.mp3",BPM:120,difficulty:"DIFFICILE",color:"red",speed:400*1.75,bg:"immagine_2026-03-03_221829535.png"},
+"ECHO":{mp3:"SpotiDownloader.com - Echo (feat. Crusher-P) - The Living Tombstone.mp3",BPM:130,difficulty:"INSANA",color:"purple",speed:400*2.75,bg:"immagine_2026-03-05_202041367.png"}
+};
+
+let currentSong = songs["BIRDBRAIN"];
+let notes=[],chart=[],noteIndex=0,hitRatings=[];
+let score=0,combo=0,totalHits=0,totalPerfect=0,noteSpeed=400,gameRunning=false,lastTime=0;
+
 function updateColumns(){
 columns = (selector.value==="ECHO")?5:4;
 arrowZoneWidth = canvas.width*0.6;
@@ -78,7 +99,6 @@ columnWidth = arrowZoneWidth/columns;
 arrowZoneOffset = (canvas.width-arrowZoneWidth)/2;
 }
 
-// Imposta colori note
 function updateNoteColors(){
 const t=bgm.currentTime;
 if(selector.value==="BIRDBRAIN"){
@@ -94,48 +114,27 @@ columnColors = ["#00ff00","#40ff00","#80ff00","#bfff00","#ff00ff"];
 }
 }
 
-// Canzoni
-const songs={
-"BIRDBRAIN":{mp3:"BIRDBRAIN.mp3",BPM:140,difficulty:"MEDIO",color:"yellow",speed:400,bg:"immagine_2026-03-03_204259655.png"},
-"Mesmerizer":{mp3:"mesmerizer.mp3",BPM:120,difficulty:"DIFFICILE",color:"red",speed:400*1.75,bg:"immagine_2026-03-03_221829535.png"},
-"ECHO":{mp3:"SpotiDownloader.com - Echo (feat. Crusher-P) - The Living Tombstone.mp3",BPM:130,difficulty:"INSANA",color:"purple",speed:400*2.75,bg:"immagine_2026-03-05_202041367.png"}
-};
-let currentSong = songs["BIRDBRAIN"];
-
-const bgm=document.getElementById("bgm");
-const bgImg=document.getElementById("bgImg");
-const scoreDisplay=document.getElementById("score");
-const comboDisplay=document.getElementById("combo");
-const rankDisplay=document.getElementById("rank");
-const selector=document.getElementById("songSelector");
-const introScreen=document.getElementById("introScreen");
-const logo=document.getElementById("logo");
-const startBtn=document.getElementById("startBtn");
-
-let notes=[],chart=[],noteIndex=0,hitRatings=[];
-let score=0,combo=0,totalHits=0,totalPerfect=0,noteSpeed=400,gameRunning=false,lastTime=0;
-const hitLineHeight = 15;
-
-// Aggiorna UI
 function updateSongUI(){
 document.getElementById("songTitle").innerText=selector.value;
 document.getElementById("difficulty").innerText=currentSong.difficulty.toUpperCase();
 document.getElementById("difficulty").style.color=currentSong.color;
 updateColumns();
 }
+
 selector.onchange=()=>{
 currentSong=songs[selector.value];
 updateSongUI();
 }
+
 updateSongUI();
 
-// Chart generico
+// Genera chart senza note iniziali a t=0
 function generateFullChart(){
 chart=[];
 const BPM=currentSong.BPM;
 const beat=60/currentSong.BPM;
-const duration=bgm.duration;
-for(let t=0;t<duration;t+=beat){
+const duration=bgm.duration||120;
+for(let t=beat;t<duration;t+=beat){
 let col=Math.floor(columns*Math.random());
 chart.push({time:t,column:col});
 }
@@ -143,7 +142,6 @@ chart.push({time:t,column:col});
 
 // Start game
 startBtn.onclick=()=>{
-introScreen.style.transition="opacity 0.5s";
 introScreen.style.opacity=0;
 setTimeout(()=>{
 introScreen.style.display="none"; 
@@ -160,16 +158,14 @@ noteSpeed=currentSong.speed;
 bgm.src=currentSong.mp3; bgm.currentTime=0;
 bgm.onloadedmetadata=()=>{
 generateFullChart();
-bgm.play();
 gameRunning=true;
 lastTime=0;
 requestAnimationFrame(gameLoop);
+bgm.play();
 }
 }
 
 // Key settings
-const keySettings=document.getElementById("keySettings");
-startBtn.addEventListener("click",()=>{keySettings.style.display = keySettings.style.display==="none"?"block":"none";});
 for(let i=0;i<5;i++){
 document.getElementById("col"+i).addEventListener("click",()=>{
 const newKey=prompt("Inserisci nuovo tasto per colonna "+(i+1), columnKeys[i]||"Space");
@@ -177,15 +173,15 @@ if(newKey){ columnKeys[i]=newKey.toUpperCase(); columnCodes[i]= newKey===" "?"Sp
 });
 }
 
-// Spawn note
 function spawnNotes(time){
-while(noteIndex<chart.length && chart[noteIndex].time <= time){
+while(noteIndex<chart.length && chart[noteIndex].time <= time + 0.1){ 
+if(chart[noteIndex].time>0){
 notes.push({y:-50,column:chart[noteIndex].column,hit:false});
+}
 noteIndex++;
 }
 }
 
-// Draw columns & labels
 function drawColumns(){
 for(let i=0;i<=columns;i++){
 ctx.strokeStyle="rgba(255,255,255,0.2)";
@@ -211,7 +207,6 @@ label.style.bottom="30px";
 }
 }
 
-// Key press
 document.addEventListener("keydown",e=>{
 if(!gameRunning)return;
 for(let note of notes){
@@ -235,7 +230,6 @@ hitRatings.push({img:img,x:arrowZoneOffset+note.column*columnWidth+columnWidth/2
 }
 });
 
-// Main loop
 function gameLoop(timestamp){
 if(!gameRunning)return;
 const delta=(timestamp-lastTime)/1000;
@@ -245,15 +239,13 @@ updateNoteColors();
 spawnNotes(bgm.currentTime);
 
 ctx.clearRect(0,0,canvas.width,canvas.height);
-ctx.fillStyle = "rgba(255,255,255,0.2)";
+
+// Hit line rettangolo semitrasparente
+ctx.fillStyle="rgba(255,255,255,0.2)";
 ctx.fillRect(arrowZoneOffset, canvas.height - 70 - hitLineHeight/2, arrowZoneWidth, hitLineHeight);
 
 drawColumns();
 drawKeyLabels();
-
-const beat = 60/currentSong.BPM;
-const pulse = Math.sin((bgm.currentTime/beat)*Math.PI*2);
-bgImg.style.transform = "scale("+(1+pulse*0.02)+")";
 
 for(let note of notes){
 if(note.hit)continue;
