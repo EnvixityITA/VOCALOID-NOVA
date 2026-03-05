@@ -141,6 +141,26 @@ function updateNoteColors(){
     else if(currentSong===songs["ECHO"]){columnColors.splice(0,5,...["#00ff00","#40ff00","#80ff00","#bfff00","#ff00ff"]);}
 }
 
+function drawKeyLabels(){
+    for(let i=0;i<columns;i++){
+        let label=document.getElementById("label"+i);
+        if(!label){
+            label=document.createElement("div");
+            label.id="label"+i;
+            label.className="columnLabel";
+            document.body.appendChild(label);
+        }
+        label.innerText=columnKeys[i] || "";
+        label.style.left=(arrowZoneOffset + i*columnWidth + columnWidth/2)+"px";
+        label.style.bottom="30px";
+        label.style.display="block";
+    }
+    for(let i=columns;i<5;i++){
+        let label=document.getElementById("label"+i);
+        if(label) label.style.display="none";
+    }
+}
+
 function updateSongUI(){
     document.getElementById("songTitle").innerText=selector.value;
     document.getElementById("difficulty").innerText=currentSong.difficulty.toUpperCase();
@@ -149,6 +169,9 @@ function updateSongUI(){
     updateColumnKeys();
     drawKeyLabels();
 }
+
+// Inizializza subito i tasti di BIRDBRAIN
+updateSongUI();
 
 settingsBtn.onclick=()=>{settingsPanel.style.display = settingsPanel.style.display==="none"?"block":"none";}
 tabKeysBtn.onclick=()=>{tabKeys.style.display="block"; tabSongs.style.display="none";}
@@ -233,26 +256,6 @@ function drawColumns(){
     }
 }
 
-function drawKeyLabels(){
-    for(let i=0;i<columns;i++){
-        let label=document.getElementById("label"+i);
-        if(!label){
-            label=document.createElement("div");
-            label.id="label"+i;
-            label.className="columnLabel";
-            document.body.appendChild(label);
-        }
-        label.innerText=columnKeys[i] || "";
-        label.style.left=(arrowZoneOffset + i*columnWidth + columnWidth/2)+"px";
-        label.style.bottom="30px";
-        label.style.display="block";
-    }
-    for(let i=columns;i<5;i++){
-        let label=document.getElementById("label"+i);
-        if(label) label.style.display="none";
-    }
-}
-
 document.addEventListener("keydown",e=>{
     if(!gameRunning)return;
     const hitWindowTop = canvas.height - 120;
@@ -316,6 +319,5 @@ function gameLoop(timestamp){
     requestAnimationFrame(gameLoop);
 }
 </script>
-
 </body>
 </html>
