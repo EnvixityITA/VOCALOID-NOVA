@@ -84,8 +84,7 @@ let columnWidth = arrowZoneWidth/columns;
 let arrowZoneOffset = (canvas.width-arrowZoneWidth)/2;
 
 let columnKeys=["D","F","H","J","K"];
-let columnCodes=["KeyD","KeyF","KeyH","KeyJ","KeyK"];
-let columnColors=[];
+const columnColors=[];
 
 const bgm=document.getElementById("bgm");
 const bgmMenu=document.getElementById("bgmMenu");
@@ -100,7 +99,6 @@ const rankDisplay=document.getElementById("rank");
 const selector=document.getElementById("songSelector");
 const selector2=document.getElementById("songSelector2");
 const introScreen=document.getElementById("introScreen");
-const logo=document.getElementById("logo");
 const startBtn=document.getElementById("startBtn");
 const settingsBtn=document.getElementById("settingsBtn");
 const settingsPanel=document.getElementById("settingsPanel");
@@ -123,24 +121,16 @@ let notes=[],chart=[],noteIndex=0,hitRatings=[];
 let score=0,combo=0,totalHits=0,totalPerfect=0,noteSpeed=400,gameRunning=false,lastTime=0;
 
 function updateColumns(){
-    if(currentSong===songs["ECHO"]){
-        columns = 5;
-    } else {
-        columns = 4;
-    }
+    if(currentSong===songs["ECHO"]){columns=5;} else{columns=4;}
     arrowZoneWidth = canvas.width*0.6;
     columnWidth = arrowZoneWidth/columns;
     arrowZoneOffset = (canvas.width-arrowZoneWidth)/2;
 }
 
 function updateNoteColors(){
-    if(currentSong===songs["BIRDBRAIN"]){
-        columnColors = ["#ff0000","#ff8000","#ff40bf","#ffff00"];
-    } else if(currentSong===songs["Mesmerizer"]){
-        columnColors = ["#00ffff","#00bfff","#0080ff","#0040ff"];
-    } else if(currentSong===songs["ECHO"]){
-        columnColors = ["#00ff00","#40ff00","#80ff00","#bfff00","#ff00ff"];
-    }
+    if(currentSong===songs["BIRDBRAIN"]){columnColors.splice(0,4,...["#ff0000","#ff8000","#ff40bf","#ffff00"]);}
+    else if(currentSong===songs["Mesmerizer"]){columnColors.splice(0,4,...["#00ffff","#00bfff","#0080ff","#0040ff"]);}
+    else if(currentSong===songs["ECHO"]){columnColors.splice(0,5,...["#00ff00","#40ff00","#80ff00","#bfff00","#ff00ff"]);}
 }
 
 function updateSongUI(){
@@ -150,41 +140,28 @@ function updateSongUI(){
     updateColumns();
 }
 
-// Tabs impostazioni
 settingsBtn.onclick=()=>{settingsPanel.style.display = settingsPanel.style.display==="none"?"block":"none";}
 tabKeysBtn.onclick=()=>{tabKeys.style.display="block"; tabSongs.style.display="none";}
 tabSongsBtn.onclick=()=>{tabKeys.style.display="none"; tabSongs.style.display="block";}
-
-// Volume
 document.getElementById("volumeSlider").oninput=function(){bgm.volume=this.value;};
 
-// Sincronizza selector2 con selector principale
 selector.onchange=function(){currentSong=songs[selector.value]; selector2.value=selector.value; updateSongUI();}
 selector2.onchange=function(){currentSong=songs[selector2.value]; selector.value=selector2.value; updateSongUI();}
 
-// Chart generator
 function generateFullChart(){
     chart=[];
     const BPM=currentSong.BPM;
     const beat=60/currentSong.BPM;
     const duration=bgm.duration||120;
     for(let t=beat; t<duration; t+=beat){
-        let col;
         if(currentSong===songs["ECHO"]){
-            col=Math.floor(Math.random()*5); 
+            let col=Math.floor(Math.random()*5);
             chart.push({time:t,column:col});
-            if(Math.random()<0.35){ 
-                let extraCol=Math.floor(Math.random()*5);
-                chart.push({time:t+beat*0.2,column:extraCol});
-            }
-        } else {
-            col=Math.floor(4*Math.random());
-            chart.push({time:t,column:col});
-        }
+            if(Math.random()<0.35){let extraCol=Math.floor(Math.random()*5); chart.push({time:t+beat*0.2,column:extraCol});}
+        }else{chart.push({time:t,column:Math.floor(4*Math.random())});}
     }
 }
 
-// Start game
 startBtn.onclick=()=>{
     introScreen.style.opacity=0;
     setTimeout(()=>{
@@ -211,14 +188,12 @@ function startGame(){
     }
 }
 
-// Key settings
 for(let i=0;i<5;i++){
     document.getElementById("col"+i).addEventListener("click",()=>{
         let currentKey = columnKeys[i];
         const newKey=prompt("Inserisci nuovo tasto per colonna "+(i+1), currentKey);
         if(newKey){ 
             columnKeys[i]=newKey.toUpperCase(); 
-            columnCodes[i]= "Key"+newKey.toUpperCase(); 
             document.getElementById("col"+i).innerText = newKey.toUpperCase(); 
         }
     });
@@ -226,9 +201,7 @@ for(let i=0;i<5;i++){
 
 function spawnNotes(time){
     while(noteIndex<chart.length && chart[noteIndex].time <= time + 0.1){ 
-        if(chart[noteIndex].time>0){
-            notes.push({y:-50,column:chart[noteIndex].column,hit:false});
-        }
+        if(chart[noteIndex].time>0){notes.push({y:-50,column:chart[noteIndex].column,hit:false});}
         noteIndex++;
     }
 }
@@ -236,7 +209,6 @@ function spawnNotes(time){
 function drawColumns(){
     for(let i=0;i<=columns;i++){
         ctx.strokeStyle="rgba(255,255,255,0.2)";
-        ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(arrowZoneOffset + i*columnWidth,0);
         ctx.lineTo(arrowZoneOffset + i*columnWidth,canvas.height);
@@ -253,27 +225,20 @@ function drawKeyLabels(){
             label.className="columnLabel";
             document.body.appendChild(label);
         }
-        if(currentSong===songs["ECHO"]){
-            let labelsMap=["D","F","H","J","K"];
-            label.innerText = labelsMap[i];
-        } else {
-            let labelsMap=["D","F","J","K"];
-            label.innerText = labelsMap[i];
-        }
+        label.innerText=columnKeys[i];
         label.style.left=(arrowZoneOffset + i*columnWidth + columnWidth/2)+"px";
         label.style.bottom="30px";
     }
 }
 
-// Key input con hit window più permissiva
 document.addEventListener("keydown",e=>{
     if(!gameRunning)return;
     const hitWindowTop = canvas.height - 90;
     const hitWindowBottom = canvas.height - 30;
     for(let note of notes){
         if(note.hit)continue;
-        let code=columnCodes[note.column];
-        if(e.code===code && note.y >= hitWindowTop && note.y <= hitWindowBottom){
+        let expectedKey = columnKeys[note.column];
+        if(e.key.toUpperCase() === expectedKey && note.y >= hitWindowTop && note.y <= hitWindowBottom){
             note.hit = true; combo++; totalHits++;
             const dist = Math.abs(note.y - (canvas.height - 70));
             if(dist < 15) totalPerfect++;  
@@ -290,25 +255,18 @@ document.addEventListener("keydown",e=>{
     }
 });
 
-// Zone MISS più permissiva
 function gameLoop(timestamp){
     if(!gameRunning)return;
     const delta=(timestamp-lastTime)/1000;
     lastTime=timestamp;
-
     updateNoteColors();
     spawnNotes(bgm.currentTime);
-
     ctx.clearRect(0,0,canvas.width,canvas.height);
-
     ctx.fillStyle="rgba(255,255,255,0.2)";
     ctx.fillRect(arrowZoneOffset, canvas.height-70-hitLineHeight/2, arrowZoneWidth, hitLineHeight);
-
     drawColumns();
     drawKeyLabels();
-
-    const missThreshold = canvas.height - 20; // più basso → più tempo prima di MISS
-
+    const missThreshold = canvas.height - 20;
     for(let note of notes){
         if(note.hit)continue;
         ctx.fillStyle=columnColors[note.column];
@@ -323,7 +281,6 @@ function gameLoop(timestamp){
             hitRatings.push({img:img,x:arrowZoneOffset+note.column*columnWidth+columnWidth/2,y:missThreshold,alpha:1});
         }
     }
-
     for(let i=hitRatings.length-1;i>=0;i--){
         const r=hitRatings[i];
         ctx.globalAlpha=r.alpha;
@@ -332,10 +289,8 @@ function gameLoop(timestamp){
         if(r.alpha<=0) hitRatings.splice(i,1);
     }
     ctx.globalAlpha=1;
-
     scoreDisplay.innerText="Punti: "+Math.floor(score);
     comboDisplay.innerText="Combo: "+combo+"x";
-
     requestAnimationFrame(gameLoop);
 }
 </script>
