@@ -3,26 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VOCALOID TEST</title>
+<title>VOCALOID TEST - OSU STYLE MENU</title>
 <style>
 body{margin:0;overflow:hidden;background:black;font-family:Arial;color:white;}
 #starsCanvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;}
-#bgImg{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:0;transition:opacity 1s;filter:blur(6px) brightness(0.45);}
+#bgImg{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:0;transition:opacity 0.5s;filter:blur(6px) brightness(0.45);}
 #gameCanvas{position:absolute;width:100%;height:100%;z-index:3;}
 #introScreen{position:absolute;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;background:black;z-index:10;opacity:1;transition:opacity 0.5s;}
 #logo{width:350px;margin-bottom:20px;filter:drop-shadow(0 0 20px white);}
-#menuTabs button{margin:0 10px;padding:10px 15px;cursor:pointer;}
-#startBtn,#settingsBtn,#backToMenu{padding:10px 20px;font-size:18px;cursor:pointer;background: rgba(255,255,255,0.1);color:white;border:2px solid white;border-radius:6px;margin:5px;}
+#menuTabMain{display:flex;flex-direction:column;align-items:center;}
+#startBtn,#settingsBtn{padding:10px 20px;font-size:18px;cursor:pointer;background: rgba(255,255,255,0.1);color:white;border:2px solid white;border-radius:6px;margin:5px;}
 #score,#combo,#rank{position:absolute;top:10px;font-size:22px;z-index:5;}
 #score{left:10px;} #combo{left:200px;} #rank{left:360px;}
-.columnLabel{position:absolute;font-size:20px;text-align:center;transform:translateX(-50%);color:white;}
+#songList{position:absolute;top:80px;left:20px;width:220px;height:70%;overflow:hidden;display:flex;flex-direction:column;z-index:12;}
+.songItem{display:flex;align-items:center;padding:5px;cursor:pointer;transition:0.2s;background:rgba(0,0,0,0.1);margin-bottom:5px;border-radius:4px;}
+.songItem.selected{background:rgba(255,255,0,0.3);}
+.songItem img{width:50px;height:50px;margin-right:10px;object-fit:cover;border-radius:4px;}
+.songItem span{color:white;font-weight:bold;}
+#songInfo{position:absolute;top:20px;left:260px;color:white;font-size:16px;}
 #settingsPanel{position:absolute;top:50px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);padding:15px;border-radius:8px;display:none;z-index:20;min-width:300px;}
 #keySettings td{border:1px solid rgba(255,255,255,0.3);padding:8px 15px;text-align:center;cursor:pointer;color:white;font-weight:bold;}
 #keySettings td:hover{background:rgba(255,255,255,0.2);}
-#songList{position:absolute;top:80px;left:20px;width:200px;height:60%;overflow:hidden;display:flex;flex-direction:column;z-index:12;}
-.songItem{padding:10px;cursor:pointer;transition:0.2s;}
-.songItem.selected{background:rgba(255,255,255,0.2);color:yellow;}
-#songInfo{position:absolute;top:20px;left:240px;color:white;font-size:16px;}
 </style>
 </head>
 <body>
@@ -32,7 +33,7 @@ body{margin:0;overflow:hidden;background:black;font-family:Arial;color:white;}
 
 <div id="introScreen">
     <img id="logo" src="Risorsa_1sinny.png" alt="Logo">
-    <div id="menuTabMain" style="display:flex;flex-direction:column;align-items:center;">
+    <div id="menuTabMain">
         <h1>VOCALOID TEST</h1>
         <button id="startBtn">START</button>
         <button id="settingsBtn">IMPOSTAZIONI</button>
@@ -40,13 +41,9 @@ body{margin:0;overflow:hidden;background:black;font-family:Arial;color:white;}
 </div>
 
 <div id="songList"></div>
-<div id="songInfo"></div>
+<div id="songInfo">Seleziona una canzone per iniziare</div>
 
 <div id="settingsPanel">
-<div id="settingsTabs">
-<button id="tabKeysBtn">Tasti e Volume</button>
-<button id="tabSongsBtn">Selezione Canzoni</button>
-</div>
 <div id="tabContent">
 <div id="tabKeys">
 <table id="keySettings"><tr>
@@ -69,7 +66,7 @@ body{margin:0;overflow:hidden;background:black;font-family:Arial;color:white;}
 <audio id="bgmMenu" loop></audio>
 
 <script>
-window.onload = function(){
+window.onload=function(){
 const canvas=document.getElementById("gameCanvas");
 const ctx=canvas.getContext("2d");
 const starsCanvas=document.getElementById("starsCanvas");
@@ -83,7 +80,6 @@ const songListDiv=document.getElementById("songList");
 const songInfoDiv=document.getElementById("songInfo");
 const volumeSlider=document.getElementById("volumeSlider");
 
-bgmMenu.src="menu_bgm.mp3";
 bgmMenu.volume=0.5;
 
 // --- CANVAS ---
@@ -96,6 +92,7 @@ for(let i=0;i<150;i++){stars.push({x:Math.random()*starsCanvas.width,y:Math.rand
 let lastStarTime=0;
 function animateStars(timestamp){
     const delta=(timestamp-lastStarTime)/1000||0;lastStarTime=timestamp;
+    lastStarTime=timestamp;
     starsCtx.clearRect(0,0,starsCanvas.width,starsCanvas.height);
     for(let s of stars){s.y+=s.speed*delta;if(s.y>starsCanvas.height)s.y=0;starsCtx.fillStyle=`rgba(255,255,255,${0.5+Math.random()*0.5})`;starsCtx.beginPath();starsCtx.arc(s.x,s.y,s.size,0,2*Math.PI);starsCtx.fill();}
     requestAnimationFrame(animateStars);
@@ -108,7 +105,7 @@ function animateLogo(timestamp){
     const delta=(timestamp-lastTime)/1000||0;
     lastTime=timestamp;
     floatTime+=delta;
-    const y=Math.sin(floatTime*0.5*2*Math.PI)*5;
+    const y=Math.sin(floatTime*0.4*2*Math.PI)*3;
     logo.style.transform=`translateY(${y}px)`;
     requestAnimationFrame(animateLogo);
 }
@@ -120,46 +117,58 @@ const songs={
 "Mesmerizer":{mp3:"mesmerizer.mp3",BPM:120,difficulty:"DIFFICILE",color:"red",bg:"immagine_2026-03-03_221829535.png"},
 "ECHO":{mp3:"SpotiDownloader.com - Echo (feat. Crusher-P) - The Living Tombstone.mp3",BPM:130,difficulty:"INSANA",color:"purple",bg:"immagine_2026-03-05_202041367.png"}
 };
-let currentSong="BIRDBRAIN";
+let currentSong=null; // nessuna selezione iniziale
 
-// --- CREA LISTA SONGS ---
+// --- CREA LISTA SONGS CON MINIATURE ---
 for(let key in songs){
     let div=document.createElement("div");
     div.className="songItem";
-    div.innerText=key;
+    let img=document.createElement("img");
+    img.src=songs[key].bg;
+    let span=document.createElement("span");
+    span.innerText=key;
+    div.appendChild(img);
+    div.appendChild(span);
     div.onclick=()=>{selectSong(key);}
     songListDiv.appendChild(div);
 }
 
 function selectSong(key){
     currentSong=key;
-    for(let item of document.getElementsByClassName("songItem")){item.classList.remove("selected");if(item.innerText===key)item.classList.add("selected");}
+    for(let item of document.getElementsByClassName("songItem")){
+        item.classList.remove("selected");
+        if(item.querySelector("span").innerText===key)item.classList.add("selected");
+    }
     songInfoDiv.innerHTML=`<strong>${key}</strong><br>Difficulty: <span style="color:${songs[key].color}">${songs[key].difficulty}</span><br>BPM: ${songs[key].BPM}`;
-    bgmMenu.pause(); bgmMenu.src=songs[key].mp3; bgmMenu.play().catch(()=>{});
+    bgImg.src=songs[key].bg;
+    bgmMenu.pause(); bgmMenu.src=songs[key].mp3;
+    bgmMenu.play().catch(()=>{});
 }
-selectSong(currentSong);
 
 // --- SCROLL ROTELLINA ---
-songListDiv.addEventListener("wheel",(e)=>{
-    e.preventDefault();
-    songListDiv.scrollTop+=e.deltaY;
-});
+songListDiv.addEventListener("wheel",(e)=>{e.preventDefault();songListDiv.scrollTop+=e.deltaY;});
 
-// --- START ---
+// --- START GAME ---
 startBtn.onclick=()=>{
+    if(!currentSong){
+        alert("Seleziona prima una canzone!");
+        return;
+    }
     document.getElementById("introScreen").style.opacity=0;
     setTimeout(()=>{
         document.getElementById("introScreen").style.display="none";
-        bgImg.src=songs[currentSong].bg; bgImg.style.opacity=1;
+        bgImg.style.opacity=1;
         bgmMenu.pause();
-        bgm.src=songs[currentSong].mp3; bgm.currentTime=0; bgm.volume=volumeSlider.value; bgm.play();
-        // Qui parte il tuo game loop originale
+        bgm.src=songs[currentSong].mp3; 
+        bgm.currentTime=0; 
+        bgm.volume=volumeSlider.value; 
+        bgm.play();
+        // Inserisci qui il game loop originale
     },500);
 }
 
 // --- VOLUME ---
 volumeSlider.oninput=()=>{bgm.volume=volumeSlider.value;}
-document.body.addEventListener("click",()=>{bgmMenu.play().catch(()=>{});},{once:true});
 };
 </script>
 </body>
