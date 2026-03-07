@@ -3,27 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VOCALOID TEST - OSU STYLE</title>
+<title>VOCALOID TEST</title>
 <style>
 body{margin:0;overflow:hidden;background:black;font-family:Arial;color:white;}
-#starsCanvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;}
-#bgImg{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:0;transition:opacity 0.5s;filter:blur(6px) brightness(0.45);}
-#gameCanvas{position:absolute;width:100%;height:100%;z-index:3;}
+#starsCanvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;}
+#bgImg{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:0;transition:opacity 1s;filter:blur(6px) brightness(0.45);}
+#gameCanvas{position:absolute;width:100%;height:100%;z-index:1;}
 #introScreen{position:absolute;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;background:black;z-index:10;opacity:1;transition:opacity 0.5s;}
 #logo{width:350px;margin-bottom:20px;filter:drop-shadow(0 0 20px white);}
-#menuTabMain{display:flex;flex-direction:column;align-items:center;}
+#songTitle{font-size:32px;margin-bottom:5px;transition:transform 0.1s;}
+#difficulty{margin-bottom:20px;font-size:20px;}
 #startBtn,#settingsBtn{padding:10px 20px;font-size:18px;cursor:pointer;background: rgba(255,255,255,0.1);color:white;border:2px solid white;border-radius:6px;margin:5px;}
 #score,#combo,#rank{position:absolute;top:10px;font-size:22px;z-index:5;}
 #score{left:10px;} #combo{left:200px;} #rank{left:360px;}
+.columnLabel{position:absolute;font-size:20px;text-align:center;transform:translateX(-50%);color:white;}
+#settingsPanel{position:absolute;top:50px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);padding:15px;border-radius:8px;display:none;z-index:20;min-width:300px;}
+#settingsTabs button{margin-right:10px;padding:5px 10px;cursor:pointer;}
+#tabContent{margin-top:10px;}
+#keySettings td{border:1px solid rgba(255,255,255,0.3);padding:8px 15px;text-align:center;cursor:pointer;color:white;font-weight:bold;}
+#keySettings td:hover{background:rgba(255,255,255,0.2);}
 #songList{position:absolute;top:80px;left:20px;width:220px;height:70%;overflow:hidden;display:flex;flex-direction:column;z-index:12;}
 .songItem{display:flex;align-items:center;padding:5px;cursor:pointer;transition:0.2s;background:rgba(0,0,0,0.1);margin-bottom:5px;border-radius:4px;}
 .songItem.selected{background:rgba(255,255,0,0.3);}
 .songItem img{width:50px;height:50px;margin-right:10px;object-fit:cover;border-radius:4px;}
 .songItem span{color:white;font-weight:bold;}
 #songInfo{position:absolute;top:20px;left:260px;color:white;font-size:16px;}
-#settingsPanel{position:absolute;top:50px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);padding:15px;border-radius:8px;display:none;z-index:20;min-width:300px;}
-#keySettings td{border:1px solid rgba(255,255,255,0.3);padding:8px 15px;text-align:center;cursor:pointer;color:white;font-weight:bold;}
-#keySettings td:hover{background:rgba(255,255,255,0.2);}
 </style>
 </head>
 <body>
@@ -33,29 +37,34 @@ body{margin:0;overflow:hidden;background:black;font-family:Arial;color:white;}
 
 <div id="introScreen">
     <img id="logo" src="Risorsa_1sinny.png" alt="Logo">
-    <div id="menuTabMain">
-        <h1>VOCALOID TEST</h1>
-        <button id="startBtn">START</button>
-        <button id="settingsBtn">IMPOSTAZIONI</button>
-    </div>
+    <h1 id="songTitle">BIRDBRAIN</h1>
+    <div id="difficulty"></div>
+    <div id="songList"></div>
+    <div id="songInfo">Seleziona una canzone per iniziare</div>
+    <button id="startBtn">START</button>
+    <button id="settingsBtn">IMPOSTAZIONI</button>
 </div>
-
-<div id="songList"></div>
-<div id="songInfo">Seleziona una canzone per iniziare</div>
 
 <div id="settingsPanel">
-<div id="tabContent">
-<div id="tabKeys">
-<table id="keySettings"><tr>
-<td id="col0">D</td>
-<td id="col1">F</td>
-<td<td id="col2">J</td>
-<td id="col3">K</td>
-<td id="col4">K</td>
-</tr></table>
-<div style="margin-top:10px;">Volume: <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.5"></div>
-</div>
-</div>
+    <div id="settingsTabs">
+        <button id="tabKeysBtn">Tasti e Volume</button>
+        <button id="tabSongsBtn">Selezione Canzoni</button>
+    </div>
+    <div id="tabContent">
+        <div id="tabKeys">
+            <table id="keySettings"><tr>
+                <td id="col0">D</td>
+                <td id="col1">F</td>
+                <td id="col2">J</td>
+                <td id="col3">K</td>
+                <td id="col4">K</td>
+            </tr></table>
+            <div style="margin-top:10px;">Volume: <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.5"></div>
+        </div>
+        <div id="tabSongs" style="display:none;">
+            <!-- opzionale se vuoi duplicare il song selector -->
+        </div>
+    </div>
 </div>
 
 <canvas id="gameCanvas"></canvas>
@@ -79,22 +88,19 @@ const logo=document.getElementById("logo");
 const songListDiv=document.getElementById("songList");
 const songInfoDiv=document.getElementById("songInfo");
 const volumeSlider=document.getElementById("volumeSlider");
+const scoreDisplay=document.getElementById("score");
+const comboDisplay=document.getElementById("combo");
+const rankDisplay=document.getElementById("rank");
 
 bgmMenu.volume=0.5;
-
-// --- CANVAS ---
-function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;starsCanvas.width=window.innerWidth;starsCanvas.height=window.innerHeight;}
-resizeCanvas();window.addEventListener("resize",resizeCanvas);
+bgmMenu.src="menu_bgm.mp3";
 
 // --- STELLE ---
 let stars=[];
-for(let i=0;i<150;i++){stars.push({x:Math.random()*starsCanvas.width,y:Math.random()*starsCanvas.height,size:Math.random()*2+1,speed:Math.random()*20+10});}
-let lastStarTime=0;
+for(let i=0;i<150;i++){stars.push({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,size:Math.random()*2+1,speed:Math.random()*20+10});}
 function animateStars(timestamp){
-    const delta=(timestamp-lastStarTime)/1000||0;lastStarTime=timestamp;
-    lastStarTime=timestamp;
     starsCtx.clearRect(0,0,starsCanvas.width,starsCanvas.height);
-    for(let s of stars){s.y+=s.speed*delta;if(s.y>starsCanvas.height)s.y=0;starsCtx.fillStyle=`rgba(255,255,255,${0.5+Math.random()*0.5})`;starsCtx.beginPath();starsCtx.arc(s.x,s.y,s.size,0,2*Math.PI);starsCtx.fill();}
+    for(let s of stars){s.y+=s.speed*0.016;if(s.y>starsCanvas.height)s.y=0;starsCtx.fillStyle=`rgba(255,255,255,${0.5+Math.random()*0.5})`;starsCtx.beginPath();starsCtx.arc(s.x,s.y,s.size,0,2*Math.PI);starsCtx.fill();}
     requestAnimationFrame(animateStars);
 }
 requestAnimationFrame(animateStars);
@@ -102,8 +108,7 @@ requestAnimationFrame(animateStars);
 // --- LOGO FLOTTANTE ---
 let floatTime=0,lastTime=0;
 function animateLogo(timestamp){
-    const delta=(timestamp-lastTime)/1000||0;
-    lastTime=timestamp;
+    const delta=(timestamp-lastTime)/1000||0; lastTime=timestamp;
     floatTime+=delta;
     const y=Math.sin(floatTime*0.4*2*Math.PI)*3;
     logo.style.transform=`translateY(${y}px)`;
@@ -123,16 +128,12 @@ let currentSong=null;
 for(let key in songs){
     let div=document.createElement("div");
     div.className="songItem";
-    let img=document.createElement("img");
-    img.src=songs[key].bg;
-    let span=document.createElement("span");
-    span.innerText=key;
-    div.appendChild(img);
-    div.appendChild(span);
+    let img=document.createElement("img"); img.src=songs[key].bg;
+    let span=document.createElement("span"); span.innerText=key;
+    div.appendChild(img); div.appendChild(span);
     div.onclick=()=>{selectSong(key);}
     songListDiv.appendChild(div);
 }
-
 function selectSong(key){
     currentSong=key;
     for(let item of document.getElementsByClassName("songItem")){
@@ -149,14 +150,12 @@ function selectSong(key){
 // --- SCROLL ROTELLINA ---
 songListDiv.addEventListener("wheel",(e)=>{e.preventDefault();songListDiv.scrollTop+=e.deltaY;});
 
-// --- GAME VARIABLES ---
-let columns=4,columnKeys=[],columnColors=[];
-let arrowZoneWidth,columnWidth,arrowZoneOffset,hitLineHeight=25;
+// --- START GAME ---
 let notes=[],chart=[],noteIndex=0,hitRatings=[];
 let score=0,combo=0,totalHits=0,totalPerfect=0,noteSpeed=300,gameRunning=false,lastFrameTime=0;
+let columns=4,columnKeys=[],columnColors=[],arrowZoneWidth,columnWidth,arrowZoneOffset,hitLineHeight=25;
 let hitScores=[];
 
-// --- START GAME ---
 startBtn.onclick=()=>{
     if(!currentSong){alert("Seleziona prima una canzone!"); return;}
     document.getElementById("introScreen").style.opacity=0;
@@ -171,26 +170,17 @@ startBtn.onclick=()=>{
 function startGame(){
     notes=[]; chart=[]; noteIndex=0; score=0; combo=0; totalHits=0; totalPerfect=0; hitScores=[];
     noteSpeed=songs[currentSong].speed;
-    columnKeys=["D","F","J","K"];
-    columnColors=["#ff0000","#ff8000","#ff40bf","#ffff00"];
+    columnKeys=["D","F","J","K"]; columnColors=["#ff0000","#ff8000","#ff40bf","#ffff00"];
     bgm.src=songs[currentSong].mp3; bgm.currentTime=0;
     bgm.volume=volumeSlider.value;
-    bgm.onloadedmetadata=()=>{
-        generateChart();
-        gameRunning=true;
-        lastFrameTime=0;
-        requestAnimationFrame(gameLoop);
-        bgm.play();
-    }
+    bgm.onloadedmetadata=()=>{ generateChart(); gameRunning=true; lastFrameTime=0; requestAnimationFrame(gameLoop); bgm.play(); }
 }
 
 function generateChart(){
     chart=[];
     const beat=60/songs[currentSong].BPM;
     const duration=bgm.duration||120;
-    for(let t=beat; t<duration; t+=beat){
-        chart.push({time:t,column:Math.floor(Math.random()*4)});
-    }
+    for(let t=beat; t<duration; t+=beat){ chart.push({time:t,column:Math.floor(Math.random()*4)}); }
 }
 
 document.addEventListener("keydown",e=>{
@@ -203,14 +193,14 @@ document.addEventListener("keydown",e=>{
         if(e.key.toUpperCase()===expectedKey && note.y>=hitWindowTop && note.y<=hitWindowBottom){
             note.hit=true; combo++; totalHits++;
             const dist=Math.abs(note.y-(canvas.height-70));
-            let rating="MEH",scoreMultiplier=0.5;
-            if(dist<10){rating="PERFECT";scoreMultiplier=1.0; totalPerfect++;}
-            else if(dist<20){rating="SICK";scoreMultiplier=0.9;}
-            else if(dist<35){rating="AWESOME";scoreMultiplier=0.8;}
-            else if(dist<50){rating="NICE";scoreMultiplier=0.7;}
+            let scoreMultiplier=0.5;
+            if(dist<10){scoreMultiplier=1.0; totalPerfect++;}
+            else if(dist<20)scoreMultiplier=0.9;
+            else if(dist<35)scoreMultiplier=0.8;
+            else if(dist<50)scoreMultiplier=0.7;
             score+=100*(1+combo*0.05);
             hitScores.push(scoreMultiplier);
-            const img=new Image(); img.src=rating+".png";
+            const img=new Image(); img.src="PERFECT.png";
             hitRatings.push({img:img,x:arrowZoneOffset+note.column*columnWidth+columnWidth/2,y:canvas.height-120,alpha:1});
         }
     }
@@ -226,15 +216,8 @@ function calculateRank(){
     return "F";
 }
 
-function resizeGameCanvas(){
-    canvas.width=window.innerWidth; canvas.height=window.innerHeight;
-    arrowZoneWidth=Math.min(canvas.width*0.6,1200);
-    columnWidth=arrowZoneWidth/columns;
-    arrowZoneOffset=(canvas.width-arrowZoneWidth)/2;
-    hitLineHeight=Math.max(25,canvas.height*0.02);
-}
-resizeGameCanvas();
-window.addEventListener("resize",resizeGameCanvas);
+function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;arrowZoneWidth=Math.min(canvas.width*0.6,1200);columnWidth=arrowZoneWidth/columns;arrowZoneOffset=(canvas.width-arrowZoneWidth)/2;hitLineHeight=Math.max(25,canvas.height*0.02);}
+resizeCanvas(); window.addEventListener("resize",resizeCanvas);
 
 function spawnNotes(time){
     while(noteIndex<chart.length && chart[noteIndex].time <= time + 0.1){
@@ -268,30 +251,19 @@ function gameLoop(timestamp){
         ctx.fillStyle=columnColors[note.column];
         note.y+=noteSpeed*delta;
         ctx.fillRect(arrowZoneOffset+note.column*columnWidth+10,note.y,columnWidth-20,50);
-        if(note.y>missThreshold){
-            note.hit=true; combo=0; totalHits++;
-            hitScores.push(0);
-            const img=new Image(); img.src="MISS.png";
-            hitRatings.push({img:img,x:arrowZoneOffset+note.column*columnWidth+columnWidth/2,y:missThreshold,alpha:1});
-        }
+        if(note.y>missThreshold){note.hit=true;combo=0;hitScores.push(0);}
     }
-    for(let i=hitRatings.length-1;i>=0;i--){
-        const r=hitRatings[i];
-        ctx.globalAlpha=r.alpha;
-        ctx.drawImage(r.img,r.x-50,r.y-25,100,50);
-        r.y-=1; r.alpha-=0.02;
-        if(r.alpha<=0) hitRatings.splice(i,1);
-    }
-    ctx.globalAlpha=1;
-    document.getElementById("score").innerText="Punti: "+Math.floor(score);
-    document.getElementById("combo").innerText="Combo: "+combo+"x";
-    document.getElementById("rank").innerText="Rank: "+calculateRank();
+    scoreDisplay.innerText="Punti: "+Math.floor(score);
+    comboDisplay.innerText="Combo: "+combo+"x";
+    rankDisplay.innerText="Rank: "+calculateRank();
     requestAnimationFrame(gameLoop);
 }
 
 // --- VOLUME ---
 volumeSlider.oninput=()=>{bgm.volume=volumeSlider.value;}
 
+// --- Avvia musica menu al primo click ---
+document.body.addEventListener("click", ()=>{ bgmMenu.play().catch(e=>{}); }, { once: true });
 };
 </script>
 </body>
