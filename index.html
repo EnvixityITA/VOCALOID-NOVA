@@ -12,11 +12,30 @@ body{margin:0;overflow:hidden;background:black;font-family:Arial;color:white;}
   left:0;
   width:100%;
   height:100%;
-  z-index:0;
+  z-index:1; /* stelle sopra background */
 }
-#bgImg{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:1;opacity:0;transition:opacity 1s;filter:blur(6px) brightness(0.45);}
-#gameCanvas{position:absolute;width:100%;height:100%;z-index:2;}
-#introScreen{position:absolute;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;background:black;z-index:10;opacity:1;transition:opacity 0.5s;}
+#bgImg{
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  z-index:0; /* sotto stelle */
+  opacity:0;
+  transition:opacity 1s;
+  filter:blur(6px) brightness(0.45);
+}
+#gameCanvas{
+  position:absolute;
+  width:100%;
+  height:100%;
+  z-index:2; /* sopra tutto per il gameplay */
+}
+#introScreen{
+  position:absolute;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;
+  background:black;z-index:10;opacity:1;transition:opacity 0.5s;
+}
 #logo{width:350px;margin-bottom:20px;filter:drop-shadow(0 0 20px white);}
 #songTitle{font-size:32px;margin-bottom:5px;transition:transform 0.1s;}
 #difficulty{margin-bottom:20px;font-size:20px;}
@@ -179,12 +198,12 @@ document.getElementById("volumeSlider").oninput=function(){bgm.volume=this.value
 selector.onchange=function(){ currentSong=songs[selector.value]; selector2.value=selector.value; updateSongUI(); }
 selector2.onchange=function(){ currentSong=songs[selector2.value]; selector.value=selector2.value; updateSongUI(); }
 
-// ---------------- LOGO FLOTTANTE ----------------
+// ---------------- LOGO FLOTTANTE LEGGERO ----------------
 let introFloatTime=0,lastIntroTime=0;
 function animateLogoFloat(delta){
     introFloatTime += delta;
-    const amplitude=10; // quanto si muove
-    const speed=1; 
+    const amplitude=5; // più leggero
+    const speed=0.5; 
     const yOffset = Math.sin(introFloatTime*speed*2*Math.PI)*amplitude;
     logo.style.transform = `translateY(${yOffset}px)`;
 }
@@ -214,7 +233,6 @@ function animateStars(timestamp){
     for(let star of stars){
         star.y += star.speed*delta;
         if(star.y>starsCanvas.height) star.y=0;
-        // scintillio
         const alpha=0.5 + Math.random()*0.5;
         starsCtx.fillStyle = `rgba(255,255,255,${alpha})`;
         starsCtx.beginPath();
@@ -228,19 +246,24 @@ requestAnimationFrame(animateStars);
 // ---------------- BGM MENU AUTOPLAY (solo dopo click) ----------------
 document.body.addEventListener("click", ()=>{ bgmMenu.play().catch(e=>console.log("Autoplay bloccato")); }, {once:true});
 
-// ---------------- INIZIO GIOCO ----------------
-startBtn.onclick=()=>{
-    introScreen.style.opacity=0;
+// ---------------- START GAME ----------------
+function startGame(){ 
+    // inserisci qui la logica completa del tuo rhythm game originale
+    // ad esempio: bgm.src = currentSong.mp3; bgm.play(); ...
+}
+
+startBtn.onclick = () => {
+    introScreen.style.opacity = 0;
     setTimeout(()=>{
-        introScreen.style.display="none";
-        bgImg.src=currentSong.bg;
-        bgImg.style.opacity=1;
+        introScreen.style.display = "none";
+        bgImg.src = currentSong.bg;
+        bgImg.style.opacity = 1;
         bgmMenu.pause();
-        // qui puoi mettere startGame() del tuo rhythm game
+        startGame(); // parte la canzone scelta
     },500);
 }
 
-}; // end window.onload
+};
 </script>
 </body>
 </html>
