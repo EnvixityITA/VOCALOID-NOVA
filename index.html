@@ -6,22 +6,12 @@
 <title>VOCALOID TEST</title>
 <style>
 body{margin:0;overflow:hidden;background:black;font-family:Arial;color:white;}
-#starsCanvas{
-  position:absolute; top:0; left:0; width:100%; height:100%; z-index:1;
-}
-#bgImg{
-  position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; z-index:0;
-  opacity:0; transition:opacity 1s; filter:blur(6px) brightness(0.45);
-}
-#gameCanvas{position:absolute;width:100%;height:100%;z-index:2;}
-#introScreen{
-  position:absolute;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;
-  background:black;z-index:10;opacity:1;transition:opacity 0.5s;
-}
+#starsCanvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;}
+#bgImg{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:0;transition:opacity 1s;filter:blur(6px) brightness(0.45);}
+#gameCanvas{position:absolute;width:100%;height:100%;z-index:3;}
+#introScreen{position:absolute;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;background:black;z-index:10;opacity:1;transition:opacity 0.5s;}
 #logo{width:350px;margin-bottom:20px;filter:drop-shadow(0 0 20px white);}
 #menuTabs button{margin:0 10px;padding:10px 15px;cursor:pointer;}
-#songSelector{margin-top:10px;padding:5px;}
-#songInfo{margin-top:10px;font-size:16px;}
 #startBtn,#settingsBtn,#backToMenu{padding:10px 20px;font-size:18px;cursor:pointer;background: rgba(255,255,255,0.1);color:white;border:2px solid white;border-radius:6px;margin:5px;}
 #score,#combo,#rank{position:absolute;top:10px;font-size:22px;z-index:5;}
 #score{left:10px;} #combo{left:200px;} #rank{left:360px;}
@@ -29,6 +19,10 @@ body{margin:0;overflow:hidden;background:black;font-family:Arial;color:white;}
 #settingsPanel{position:absolute;top:50px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);padding:15px;border-radius:8px;display:none;z-index:20;min-width:300px;}
 #keySettings td{border:1px solid rgba(255,255,255,0.3);padding:8px 15px;text-align:center;cursor:pointer;color:white;font-weight:bold;}
 #keySettings td:hover{background:rgba(255,255,255,0.2);}
+#songList{position:absolute;top:80px;left:20px;width:200px;height:60%;overflow:hidden;display:flex;flex-direction:column;z-index:12;}
+.songItem{padding:10px;cursor:pointer;transition:0.2s;}
+.songItem.selected{background:rgba(255,255,255,0.2);color:yellow;}
+#songInfo{position:absolute;top:20px;left:240px;color:white;font-size:16px;}
 </style>
 </head>
 <body>
@@ -38,28 +32,15 @@ body{margin:0;overflow:hidden;background:black;font-family:Arial;color:white;}
 
 <div id="introScreen">
     <img id="logo" src="Risorsa_1sinny.png" alt="Logo">
-    <div id="menuTabs" style="display:flex;margin-bottom:20px;">
-        <button id="tabMainBtn">Menu</button>
-        <button id="tabSongsBtnMain">Songs</button>
-    </div>
-
     <div id="menuTabMain" style="display:flex;flex-direction:column;align-items:center;">
         <h1>VOCALOID TEST</h1>
         <button id="startBtn">START</button>
         <button id="settingsBtn">IMPOSTAZIONI</button>
     </div>
-
-    <div id="menuTabSongs" style="display:none;flex-direction:column;align-items:center;">
-        <h2>Seleziona Canzone</h2>
-        <select id="songSelector">
-            <option value="BIRDBRAIN">BIRDBRAIN</option>
-            <option value="Mesmerizer">MESMERIZER</option>
-            <option value="ECHO">ECHO</option>
-        </select>
-        <div id="songInfo"></div>
-        <button id="backToMenu">← Torna al Menu</button>
-    </div>
 </div>
+
+<div id="songList"></div>
+<div id="songInfo"></div>
 
 <div id="settingsPanel">
 <div id="settingsTabs">
@@ -77,13 +58,6 @@ body{margin:0;overflow:hidden;background:black;font-family:Arial;color:white;}
 </tr></table>
 <div style="margin-top:10px;">Volume: <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.5"></div>
 </div>
-<div id="tabSongs" style="display:none;">
-<select id="songSelector2">
-<option value="BIRDBRAIN">BIRDBRAIN</option>
-<option value="Mesmerizer">MESMERIZER</option>
-<option value="ECHO">ECHO</option>
-</select>
-</div>
 </div>
 </div>
 
@@ -95,154 +69,97 @@ body{margin:0;overflow:hidden;background:black;font-family:Arial;color:white;}
 <audio id="bgmMenu" loop></audio>
 
 <script>
-window.onload = function() {
+window.onload = function(){
 const canvas=document.getElementById("gameCanvas");
 const ctx=canvas.getContext("2d");
 const starsCanvas=document.getElementById("starsCanvas");
 const starsCtx=starsCanvas.getContext("2d");
-
-let columns = 4;
-let arrowZoneWidth, columnWidth, arrowZoneOffset;
-let columnKeys=[]; 
-const columnColors=[];
-let hitLineHeight = 25;
-
 const bgm=document.getElementById("bgm");
 const bgmMenu=document.getElementById("bgmMenu");
-bgmMenu.src="menu_bgm.mp3"; 
+const bgImg=document.getElementById("bgImg");
+const startBtn=document.getElementById("startBtn");
+const logo=document.getElementById("logo");
+const songListDiv=document.getElementById("songList");
+const songInfoDiv=document.getElementById("songInfo");
+const volumeSlider=document.getElementById("volumeSlider");
+
+bgmMenu.src="menu_bgm.mp3";
 bgmMenu.volume=0.5;
 
-const bgImg=document.getElementById("bgImg");
-const scoreDisplay=document.getElementById("score");
-const comboDisplay=document.getElementById("combo");
-const rankDisplay=document.getElementById("rank");
-const selector=document.getElementById("songSelector");
-const selector2=document.getElementById("songSelector2");
-const introScreen=document.getElementById("introScreen");
-const startBtn=document.getElementById("startBtn");
-const settingsBtn=document.getElementById("settingsBtn");
-const settingsPanel=document.getElementById("settingsPanel");
-const tabKeysBtn=document.getElementById("tabKeysBtn");
-const tabSongsBtn=document.getElementById("tabSongsBtn");
-const tabKeys=document.getElementById("tabKeys");
-const tabSongs=document.getElementById("tabSongs");
-const logo=document.getElementById("logo");
+// --- CANVAS ---
+function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;starsCanvas.width=window.innerWidth;starsCanvas.height=window.innerHeight;}
+resizeCanvas();window.addEventListener("resize",resizeCanvas);
 
-const tabMainBtn=document.getElementById("tabMainBtn");
-const tabSongsBtnMain=document.getElementById("tabSongsBtnMain");
-const menuTabMain=document.getElementById("menuTabMain");
-const menuTabSongs=document.getElementById("menuTabSongs");
-const backToMenu=document.getElementById("backToMenu");
-const songInfo=document.getElementById("songInfo");
-
-const songs={
-"BIRDBRAIN":{mp3:"BIRDBRAIN.mp3",BPM:140,difficulty:"MEDIO",color:"yellow",speed:300,bg:"immagine_2026-03-03_204259655.png"},
-"Mesmerizer":{mp3:"mesmerizer.mp3",BPM:120,difficulty:"DIFFICILE",color:"red",speed:400*1.75,bg:"immagine_2026-03-03_221829535.png"},
-"ECHO":{mp3:"SpotiDownloader.com - Echo (feat. Crusher-P) - The Living Tombstone.mp3",BPM:130,difficulty:"INSANA",color:"purple",speed:400*1.85,bg:"immagine_2026-03-05_202041367.png"}
-};
-
-let currentSong = songs["BIRDBRAIN"];
-let notes=[],chart=[],noteIndex=0,hitRatings=[],hitScores=[];
-let score=0,combo=0,totalHits=0,totalPerfect=0,noteSpeed=300,gameRunning=false,lastTime=0;
-let introBPM = 140;
-
-// ---------- CANVAS E STELLE ----------
-function resizeCanvas(){
-    canvas.width=window.innerWidth; canvas.height=window.innerHeight;
-    arrowZoneWidth=Math.min(canvas.width*0.6,1200);
-    columnWidth=arrowZoneWidth/columns;
-    arrowZoneOffset=(canvas.width-arrowZoneWidth)/2;
-    hitLineHeight=Math.max(25,canvas.height*0.02);
-    starsCanvas.width=window.innerWidth; starsCanvas.height=window.innerHeight;
-}
-resizeCanvas(); window.addEventListener("resize",resizeCanvas);
-
+// --- STELLE ---
 let stars=[];
-function initStars(count=150){
-    stars=[];
-    for(let i=0;i<count;i++){
-        stars.push({x:Math.random()*starsCanvas.width,y:Math.random()*starsCanvas.height,size:Math.random()*2+1,speed:Math.random()*20+10});
-    }
-}
-initStars();
-
+for(let i=0;i<150;i++){stars.push({x:Math.random()*starsCanvas.width,y:Math.random()*starsCanvas.height,size:Math.random()*2+1,speed:Math.random()*20+10});}
 let lastStarTime=0;
 function animateStars(timestamp){
-    const delta=(timestamp-lastStarTime)/1000||0;
-    lastStarTime=timestamp;
+    const delta=(timestamp-lastStarTime)/1000||0;lastStarTime=timestamp;
     starsCtx.clearRect(0,0,starsCanvas.width,starsCanvas.height);
-    for(let s of stars){
-        s.y+=s.speed*delta;
-        if(s.y>starsCanvas.height)s.y=0;
-        starsCtx.fillStyle=`rgba(255,255,255,${0.5+Math.random()*0.5})`;
-        starsCtx.beginPath(); starsCtx.arc(s.x,s.y,s.size,0,2*Math.PI); starsCtx.fill();
-    }
+    for(let s of stars){s.y+=s.speed*delta;if(s.y>starsCanvas.height)s.y=0;starsCtx.fillStyle=`rgba(255,255,255,${0.5+Math.random()*0.5})`;starsCtx.beginPath();starsCtx.arc(s.x,s.y,s.size,0,2*Math.PI);starsCtx.fill();}
     requestAnimationFrame(animateStars);
 }
 requestAnimationFrame(animateStars);
 
-// ---------- LOGO FLOTTANTE ----------
-let introFloatTime=0,lastIntroTime=0;
-function animateLogoFloat(delta){
-    introFloatTime+=delta;
-    const amplitude=5,speed=0.5;
-    const yOffset=Math.sin(introFloatTime*speed*2*Math.PI)*amplitude;
-    logo.style.transform=`translateY(${yOffset}px)`;
+// --- LOGO FLOTTANTE ---
+let floatTime=0,lastTime=0;
+function animateLogo(timestamp){
+    const delta=(timestamp-lastTime)/1000||0;
+    lastTime=timestamp;
+    floatTime+=delta;
+    const y=Math.sin(floatTime*0.5*2*Math.PI)*5;
+    logo.style.transform=`translateY(${y}px)`;
+    requestAnimationFrame(animateLogo);
 }
-function introLoop(timestamp){
-    const delta=(timestamp-lastIntroTime)/1000||0;
-    lastIntroTime=timestamp;
-    animateLogoFloat(delta);
-    requestAnimationFrame(introLoop);
-}
-requestAnimationFrame(introLoop);
+requestAnimationFrame(animateLogo);
 
-// ---------- TAB CANZONI ----------
-function updateSongInfo(){
-    const song=songs[selector.value];
-    songInfo.innerHTML=`<strong>${selector.value}</strong><br>Difficulty: <span style="color:${song.color}">${song.difficulty}</span><br>BPM: ${song.BPM}`;
-}
-selector.onchange=()=>{
-    currentSong=songs[selector.value];
-    updateSongInfo();
-    bgmMenu.pause();
-    bgmMenu.src=currentSong.mp3;
-    bgmMenu.play().catch(()=>{});
-}
-updateSongInfo();
+// --- SONGS ---
+const songs={
+"BIRDBRAIN":{mp3:"BIRDBRAIN.mp3",BPM:140,difficulty:"MEDIO",color:"yellow",bg:"immagine_2026-03-03_204259655.png"},
+"Mesmerizer":{mp3:"mesmerizer.mp3",BPM:120,difficulty:"DIFFICILE",color:"red",bg:"immagine_2026-03-03_221829535.png"},
+"ECHO":{mp3:"SpotiDownloader.com - Echo (feat. Crusher-P) - The Living Tombstone.mp3",BPM:130,difficulty:"INSANA",color:"purple",bg:"immagine_2026-03-05_202041367.png"}
+};
+let currentSong="BIRDBRAIN";
 
-tabMainBtn.onclick=()=>{menuTabMain.style.display="flex"; menuTabSongs.style.display="none";}
-tabSongsBtnMain.onclick=()=>{menuTabMain.style.display="none"; menuTabSongs.style.display="flex";}
-backToMenu.onclick=()=>{
-    menuTabMain.style.display="flex"; menuTabSongs.style.display="none";
-    bgmMenu.pause();
-    bgmMenu.src="menu_bgm.mp3";
-    bgmMenu.play().catch(()=>{});
+// --- CREA LISTA SONGS ---
+for(let key in songs){
+    let div=document.createElement("div");
+    div.className="songItem";
+    div.innerText=key;
+    div.onclick=()=>{selectSong(key);}
+    songListDiv.appendChild(div);
 }
 
-// ---------- BGM MENU AUTOPLAY ----------
-document.body.addEventListener("click",()=>{bgmMenu.play().catch(()=>{});},{once:true});
-
-// ---------- START GAME ----------
-function startGame(){ 
-    // Qui inserisci la logica completa del tuo rhythm game originale
-    bgm.src=currentSong.mp3; 
-    bgm.currentTime=0;
-    bgm.volume=document.getElementById("volumeSlider").value;
-    bgm.play();
+function selectSong(key){
+    currentSong=key;
+    for(let item of document.getElementsByClassName("songItem")){item.classList.remove("selected");if(item.innerText===key)item.classList.add("selected");}
+    songInfoDiv.innerHTML=`<strong>${key}</strong><br>Difficulty: <span style="color:${songs[key].color}">${songs[key].difficulty}</span><br>BPM: ${songs[key].BPM}`;
+    bgmMenu.pause(); bgmMenu.src=songs[key].mp3; bgmMenu.play().catch(()=>{});
 }
+selectSong(currentSong);
 
+// --- SCROLL ROTELLINA ---
+songListDiv.addEventListener("wheel",(e)=>{
+    e.preventDefault();
+    songListDiv.scrollTop+=e.deltaY;
+});
+
+// --- START ---
 startBtn.onclick=()=>{
-    introScreen.style.opacity=0;
+    document.getElementById("introScreen").style.opacity=0;
     setTimeout(()=>{
-        introScreen.style.display="none";
-        bgImg.src=currentSong.bg;
-        bgImg.style.opacity=1;
+        document.getElementById("introScreen").style.display="none";
+        bgImg.src=songs[currentSong].bg; bgImg.style.opacity=1;
         bgmMenu.pause();
-        startGame();
+        bgm.src=songs[currentSong].mp3; bgm.currentTime=0; bgm.volume=volumeSlider.value; bgm.play();
+        // Qui parte il tuo game loop originale
     },500);
 }
 
+// --- VOLUME ---
+volumeSlider.oninput=()=>{bgm.volume=volumeSlider.value;}
+document.body.addEventListener("click",()=>{bgmMenu.play().catch(()=>{});},{once:true});
 };
 </script>
 </body>
