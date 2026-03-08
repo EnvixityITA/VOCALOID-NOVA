@@ -49,9 +49,9 @@ body{margin:0;overflow:hidden;background:black;font-family:Arial;color:white;}
 <table id="keySettings"><tr>
 <td id="col0">D</td>
 <td id="col1">F</td>
-<td id="col2">J</td>
-<td id="col3">K</td>
-<td id="col4">L</td>
+<td id="col2">H</td>
+<td id="col3">J</td>
+<td id="col4">K</td>
 </tr></table>
 <div style="margin-top:10px;">Volume: <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.5"></div>
 </div>
@@ -73,14 +73,14 @@ body{margin:0;overflow:hidden;background:black;font-family:Arial;color:white;}
 <audio id="bgmMenu" loop></audio>
 
 <script>
-window.onload = function(){
+window.onload=function(){
 const canvas=document.getElementById("gameCanvas");
 const ctx=canvas.getContext("2d");
 let columns = 4;
 let arrowZoneWidth, columnWidth, arrowZoneOffset;
 let columnKeys=[];
 const columnColors=[];
-let hitLineHeight = 25;
+let hitLineHeight = 35; // Hit line più grande
 
 const bgm=document.getElementById("bgm");
 const bgmMenu=document.getElementById("bgmMenu");
@@ -104,8 +104,8 @@ const tabSongs=document.getElementById("tabSongs");
 const logo=document.getElementById("logo");
 
 const songs={
-"BIRDBRAIN":{mp3:"BIRDBRAIN.mp3",BPM:140,difficulty:"MEDIO",color:"yellow",speed:300,bg:"immagine_2026-03-03_204259655.png",silentSections:[[0,3],[40,44],[90,94]]},
-"Mesmerizer":{mp3:"mesmerizer.mp3",BPM:120,difficulty:"DIFFICILE",color:"red",speed:400*1.75,bg:"immagine_2026-03-03_221829535.png",silentSections:[[0,4],[55,60]]},
+"BIRDBRAIN":{mp3:"BIRDBRAIN.mp3",BPM:140,difficulty:"MEDIO",color:"yellow",speed:300,bg:"immagine_2026-03-03_204259655.png",silentSections:[[10,15],[60,65],[110,115]]},
+"Mesmerizer":{mp3:"mesmerizer.mp3",BPM:120,difficulty:"DIFFICILE",color:"red",speed:400*1.75,bg:"immagine_2026-03-03_221829535.png",silentSections:[[20,25],[80,85]]},
 "ECHO":{mp3:"SpotiDownloader.com - Echo (feat. Crusher-P) - The Living Tombstone.mp3",BPM:130,difficulty:"INSANA",color:"purple",speed:400*1.85,bg:"immagine_2026-03-05_202041367.png",silentSections:[[0,6],[70,75]]}
 };
 
@@ -116,36 +116,36 @@ let introBPM = 140;
 let hitScores = [];
 
 function resizeCanvas(){
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    arrowZoneWidth = Math.min(canvas.width*0.6, 1200); 
-    columnWidth = arrowZoneWidth / columns;
-    arrowZoneOffset = (canvas.width - arrowZoneWidth)/2;
-    hitLineHeight = Math.max(25, canvas.height*0.02);
+    canvas.width=window.innerWidth;
+    canvas.height=window.innerHeight;
+    arrowZoneWidth=Math.min(canvas.width*0.6,1200);
+    columnWidth=arrowZoneWidth/columns;
+    arrowZoneOffset=(canvas.width-arrowZoneWidth)/2;
+    hitLineHeight=Math.max(30,canvas.height*0.025);
     drawKeyLabels();
 }
 resizeCanvas();
-window.addEventListener("resize", resizeCanvas);
+window.addEventListener("resize",resizeCanvas);
 
-function updateColumns(){ columns = (currentSong===songs["ECHO"])?5:4; columnWidth = arrowZoneWidth / columns; arrowZoneOffset = (canvas.width - arrowZoneWidth)/2; }
-function updateColumnKeys(){ columnKeys = (currentSong===songs["ECHO"])?["D","F","H","J","L"]:["D","F","J","K"]; }
+function updateColumns(){ columns = (currentSong===songs["ECHO"])?5:5; columnWidth=arrowZoneWidth/columns; arrowZoneOffset=(canvas.width-arrowZoneWidth)/2;}
+function updateColumnKeys(){ columnKeys = (currentSong===songs["ECHO"])?["D","F","H","J","K"]:["D","F","H","J","K","L"].slice(0,columns);}
 function updateNoteColors(){
     if(currentSong===songs["BIRDBRAIN"]) columnColors.splice(0,4,...["#ff0000","#ff8000","#ff40bf","#ffff00"]);
     else if(currentSong===songs["Mesmerizer"]) columnColors.splice(0,4,...["#00ffff","#00bfff","#0080ff","#0040ff"]);
     else if(currentSong===songs["ECHO"]) columnColors.splice(0,5,...["#00ff00","#40ff00","#80ff00","#bfff00","#ff00ff"]);
 }
 function drawKeyLabels(){
-    const fontSize = Math.max(18, canvas.width*0.015);
+    const fontSize=Math.max(18,canvas.width*0.015);
     for(let i=0;i<columns;i++){
         let label=document.getElementById("label"+i);
-        if(!label){ label=document.createElement("div"); label.id="label"+i; label.className="columnLabel"; document.body.appendChild(label); }
-        label.innerText=columnKeys[i] || "";
-        label.style.left=(arrowZoneOffset + i*columnWidth + columnWidth/2)+"px";
+        if(!label){ label=document.createElement("div"); label.id="label"+i; label.className="columnLabel"; document.body.appendChild(label);}
+        label.innerText=columnKeys[i]||"";
+        label.style.left=(arrowZoneOffset+i*columnWidth+columnWidth/2)+"px";
         label.style.bottom=(canvas.height*0.02)+"px";
-        label.style.fontSize = fontSize + "px";
+        label.style.fontSize=fontSize+"px";
         label.style.display="block";
     }
-    for(let i=columns;i<5;i++){ let label=document.getElementById("label"+i); if(label) label.style.display="none"; }
+    for(let i=columns;i<5;i++){ let label=document.getElementById("label"+i); if(label) label.style.display="none";}
 }
 
 function updateSongUI(){
@@ -155,28 +155,28 @@ function updateSongUI(){
     updateColumns();
     updateColumnKeys();
     drawKeyLabels();
-    introBPM = currentSong.BPM;
+    introBPM=currentSong.BPM;
 }
 updateSongUI();
 
-settingsBtn.onclick=()=>{settingsPanel.style.display = settingsPanel.style.display==="none"?"block":"none";}
+settingsBtn.onclick=()=>{settingsPanel.style.display=settingsPanel.style.display==="none"?"block":"none";}
 tabKeysBtn.onclick=()=>{tabKeys.style.display="block"; tabSongs.style.display="none";}
 tabSongsBtn.onclick=()=>{tabKeys.style.display="none"; tabSongs.style.display="block";}
 document.getElementById("volumeSlider").oninput=function(){bgm.volume=this.value;};
-selector.onchange=function(){ currentSong=songs[selector.value]; selector2.value=selector.value; updateSongUI(); }
-selector2.onchange=function(){ currentSong=songs[selector2.value]; selector.value=selector2.value; updateSongUI(); }
+selector.onchange=function(){currentSong=songs[selector.value]; selector2.value=selector.value; updateSongUI();}
+selector2.onchange=function(){currentSong=songs[selector2.value]; selector.value=selector2.value; updateSongUI();}
 
-let introBeatTime=0, lastIntroTime=0;
+let introBeatTime=0,lastIntroTime=0;
 function animateLogoBeat(delta){
-    introBeatTime += delta;
-    const beatInterval = 60 / introBPM;
-    const phase = (introBeatTime % beatInterval)/beatInterval;
-    const scale = 1 + 0.03 * Math.sin(phase * 2 * Math.PI);
-    logo.style.transform = `scale(${scale})`;
+    introBeatTime+=delta;
+    const beatInterval=60/introBPM;
+    const phase=(introBeatTime%beatInterval)/beatInterval;
+    const scale=1+0.03*Math.sin(phase*2*Math.PI);
+    logo.style.transform=`scale(${scale})`;
 }
 function introLoop(timestamp){
-    const delta = (timestamp - lastIntroTime)/1000 || 0;
-    lastIntroTime = timestamp;
+    const delta=(timestamp-lastIntroTime)/1000||0;
+    lastIntroTime=timestamp;
     animateLogoBeat(delta);
     requestAnimationFrame(introLoop);
 }
@@ -186,18 +186,11 @@ function generateFullChart(){
     chart=[];
     const beat=60/currentSong.BPM;
     const duration=bgm.duration||120;
-    for(let t=beat; t<duration; t+=beat){
-        // Controllo se siamo in sezione silenziosa
+    for(let t=beat;t<duration;t+=beat){
         let silent=false;
-        for(let s of currentSong.silentSections){
-            if(t>=s[0] && t<=s[1]) silent=true;
-        }
+        for(let s of currentSong.silentSections){ if(t>=s[0] && t<=s[1]) silent=true; }
         if(silent) continue;
-        if(currentSong===songs["ECHO"]){
-            let col=Math.floor(Math.random()*5);
-            chart.push({time:t,column:col});
-            if(Math.random()<0.35){let extraCol=Math.floor(Math.random()*5); chart.push({time:t+beat*0.2,column:extraCol});}
-        }else chart.push({time:t,column:Math.floor(4*Math.random())});
+        chart.push({time:t,column:Math.floor(columns*Math.random())});
     }
 }
 
@@ -216,7 +209,7 @@ function startGame(){
     notes=[]; chart=[]; noteIndex=0;
     score=0; combo=0; totalHits=0; totalPerfect=0;
     noteSpeed=currentSong.speed;
-    hitScores = [];
+    hitScores=[];
     bgm.src=currentSong.mp3; bgm.currentTime=0;
     bgm.volume=document.getElementById("volumeSlider").value;
     bgm.onloadedmetadata=()=>{
@@ -230,24 +223,21 @@ function startGame(){
 
 document.addEventListener("keydown",e=>{
     if(!gameRunning)return;
-    const hitWindowTop = canvas.height - 120;
-    const hitWindowBottom = canvas.height - 20;
+    const hitWindowTop=canvas.height-120;
+    const hitWindowBottom=canvas.height-20;
     for(let note of notes){
         if(note.hit)continue;
-        let expectedKey = columnKeys[note.column];
-        if(e.key.toUpperCase() === expectedKey && note.y >= hitWindowTop && note.y <= hitWindowBottom){
-            note.hit = true; combo++; totalHits++;
-            const dist = Math.abs(note.y - (canvas.height - 70));
-            let rating = "MEH";
-            let scoreMultiplier = 0.5;
-            if(dist < 10){ rating="PERFECT"; scoreMultiplier=1.0; totalPerfect++; }
-            else if(dist < 20){ rating="SICK"; scoreMultiplier=0.9; }
-            else if(dist < 35){ rating="AWESOME"; scoreMultiplier=0.8; }
-            else if(dist < 50){ rating="NICE"; scoreMultiplier=0.7; }
-
-            score += 100 * (1 + combo*0.05);
+        let expectedKey=columnKeys[note.column];
+        if(e.key.toUpperCase()===expectedKey && note.y>=hitWindowTop && note.y<=hitWindowBottom){
+            note.hit=true; combo++; totalHits++;
+            let dist=Math.abs(note.y-(canvas.height-70));
+            let rating="MEH"; let scoreMultiplier=0.5;
+            if(dist<10){ rating="PERFECT"; scoreMultiplier=1; totalPerfect++;}
+            else if(dist<20){ rating="SICK"; scoreMultiplier=0.9;}
+            else if(dist<35){ rating="AWESOME"; scoreMultiplier=0.8;}
+            else if(dist<50){ rating="NICE"; scoreMultiplier=0.7;}
+            score+=100*(1+combo*0.05);
             hitScores.push(scoreMultiplier);
-
             const img=new Image();
             img.src=rating+".png";
             hitRatings.push({img:img,x:arrowZoneOffset+note.column*columnWidth+columnWidth/2,y:canvas.height-120,alpha:1});
@@ -256,17 +246,17 @@ document.addEventListener("keydown",e=>{
 });
 
 function calculateRank(){
-    if(hitScores.length === 0) return "F";
-    const accuracy = hitScores.reduce((a,b)=>a+b,0)/hitScores.length;
-    if(accuracy>=0.90) return "S";
-    if(accuracy>=0.80) return "A";
-    if(accuracy>=0.65) return "B";
-    if(accuracy>=0.50) return "C";
+    if(hitScores.length===0) return "F";
+    const accuracy=hitScores.reduce((a,b)=>a+b,0)/hitScores.length;
+    if(accuracy>=0.90)return "S";
+    if(accuracy>=0.80)return "A";
+    if(accuracy>=0.65)return "B";
+    if(accuracy>=0.50)return "C";
     return "F";
 }
 
 function spawnNotes(time){
-    while(noteIndex<chart.length && chart[noteIndex].time <= time + 0.1){ 
+    while(noteIndex<chart.length && chart[noteIndex].time<=time+0.1){
         if(chart[noteIndex].time>0) notes.push({y:-50,column:chart[noteIndex].column,hit:false});
         noteIndex++;
     }
@@ -275,8 +265,8 @@ function drawColumns(){
     for(let i=0;i<=columns;i++){
         ctx.strokeStyle="rgba(255,255,255,0.2)";
         ctx.beginPath();
-        ctx.moveTo(arrowZoneOffset + i*columnWidth,0);
-        ctx.lineTo(arrowZoneOffset + i*columnWidth,canvas.height);
+        ctx.moveTo(arrowZoneOffset+i*columnWidth,0);
+        ctx.lineTo(arrowZoneOffset+i*columnWidth,canvas.height);
         ctx.stroke();
     }
 }
@@ -288,23 +278,19 @@ function gameLoop(timestamp){
     updateNoteColors();
     spawnNotes(bgm.currentTime);
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle="rgba(255,255,255,0.2)";
-    ctx.fillRect(arrowZoneOffset, canvas.height-70-hitLineHeight/2, arrowZoneWidth, hitLineHeight);
+    ctx.fillStyle="white";
+    ctx.fillRect(arrowZoneOffset,canvas.height-70-hitLineHeight/2,arrowZoneWidth,hitLineHeight); // hit line più spessa e bianca
     drawColumns();
     drawKeyLabels();
-    const missThreshold = canvas.height - 20;
+    const missThreshold=canvas.height-20;
     for(let note of notes){
         if(note.hit)continue;
         ctx.fillStyle=columnColors[note.column];
         note.y+=noteSpeed*delta;
         ctx.fillRect(arrowZoneOffset+note.column*columnWidth+10,note.y,columnWidth-20,50);
-        if(note.y > missThreshold){
-            note.hit = true;
-            combo = 0;
-            totalHits++;
-            hitScores.push(0);
-            const img=new Image();
-            img.src = "MISS.png";
+        if(note.y>missThreshold){
+            note.hit=true; combo=0; totalHits++; hitScores.push(0);
+            const img=new Image(); img.src="MISS.png";
             hitRatings.push({img:img,x:arrowZoneOffset+note.column*columnWidth+columnWidth/2,y:missThreshold,alpha:1});
         }
     }
@@ -322,11 +308,10 @@ function gameLoop(timestamp){
     requestAnimationFrame(gameLoop);
 }
 
-document.body.addEventListener("click", ()=>{
+document.body.addEventListener("click",()=>{
     bgmMenu.play().catch(e=>console.log("Autoplay bloccato"));
-}, { once: true });
+},{once:true});
 };
 </script>
-
 </body>
 </html>
